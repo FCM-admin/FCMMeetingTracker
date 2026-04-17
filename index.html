@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FCM HOA Compliance Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f0f4f8;--card:#fff;--primary:#1a4f8a;--primary-dark:#123a68;--green:#3a8c3f;--accent:#3a8c3f;--warn:#e65100;--danger:#c62828;--info:#1565c0;--border:#dde3ea;--text:#1a1a2e;--muted:#6b7280;--blue-team:#1565c0;--green-team:#2e7d32}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+header{background:var(--primary);color:#fff;padding:0 20px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;height:56px}
+.header-logo{display:flex;align-items:center;gap:10px}
+.header-title{font-size:15px;font-weight:700;line-height:1.2;color:#fff}
+.header-title span{font-size:11px;font-weight:400;opacity:.75;display:block}
+header .clock{font-size:12px;opacity:.7;margin-left:auto}
+.fcm-bar{height:4px;background:linear-gradient(90deg,var(--primary) 60%,var(--green) 100%)}
+nav{background:#fff;border-bottom:2px solid var(--border);display:flex;position:sticky;top:60px;z-index:99;overflow-x:visible;flex-wrap:wrap}
+nav button{padding:13px 16px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;transition:.2s;white-space:nowrap}
+nav button.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+nav button:hover{background:#f5f7fa}
+.page{display:none;padding:20px;max-width:1500px;margin:0 auto}
+.page.active{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.card h3{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-red{background:#ffebee;color:var(--danger)}
+.badge-yellow{background:#fff8e1;color:#e65100}
+.badge-green{background:#e8f5e9;color:var(--accent)}
+.badge-blue{background:#e3f2fd;color:var(--info)}
+.badge-gray{background:#f5f5f5;color:var(--muted)}
+.badge-purple{background:#f3e5f5;color:#7b1fa2}
+.badge-teal{background:#e0f2f1;color:#00695c}
+.badge-orange{background:#fff3e0;color:#e65100}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#f8fafc;padding:8px 10px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{background:#eef1f5;color:var(--primary)}
+th.sort-asc::after{content:' ▲';font-size:9px}
+th.sort-desc::after{content:' ▼';font-size:9px}
+td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:#fafbfc}
+.btn{padding:7px 14px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:.15s}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-sm{padding:4px 9px;font-size:11px}
+.btn-success{background:var(--accent);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:#fff;border:1px solid var(--border);color:var(--text)}.btn-outline:hover{background:#f5f7fa}
+.btn-warning{background:#e65100;color:#fff}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.form-row{margin-bottom:13px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;padding:24px;width:560px;max-width:96vw;max-height:92vh;overflow-y:auto;position:relative}
+.modal h2{font-size:16px;margin-bottom:16px;color:var(--primary)}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)}
+.deadline-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:6px;border-left:4px solid transparent}
+.deadline-row.overdue{background:#fff5f5;border-left-color:var(--danger)}
+.deadline-row.soon{background:#fffbf0;border-left-color:#e65100}
+.deadline-row.ok{background:#f1f8f1;border-left-color:var(--accent)}
+.deadline-row.today{background:#fff3e0;border-left-color:#f57c00}
+.deadline-row.done{background:#f1f8f1;border-left-color:var(--accent);opacity:.75}
+.dl-info{flex:1;min-width:0}
+.dl-info strong{display:block;font-size:12px}
+.dl-info span{font-size:11px;color:var(--muted)}
+.meeting-week-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:6px;background:#e8f0fe;border-left:4px solid var(--info)}
+.meeting-completed-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:6px;background:#e8f5e9;border-left:4px solid var(--accent)}
+.stat-box{text-align:center;padding:14px;transition:.15s;cursor:pointer}
+.stat-box:hover{background:#f0f4f8;transform:translateY(-1px)}
+.stat-box .num{font-size:28px;font-weight:700;color:var(--primary)}
+.stat-box .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.stat-box .hint{font-size:10px;color:var(--muted);margin-top:4px}
+.team-blue{color:var(--blue-team);font-weight:600}
+.team-green{color:var(--green-team);font-weight:600}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.section-header h2{font-size:16px;font-weight:700}
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{max-width:170px;width:auto;font-size:12px;padding:6px 9px}
+.progress-bar{background:#e0e0e0;border-radius:4px;height:7px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:4px;transition:.3s}
+.webhook-box{background:#1e1e2e;color:#a6e3a1;padding:12px;border-radius:8px;font-family:monospace;font-size:11px;word-break:break-all;margin:8px 0}
+.empty{text-align:center;padding:24px;color:var(--muted);font-size:13px}
+.chip{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;margin:1px}
+.chip-blue{background:#e3f2fd;color:var(--info)}
+.file-link{color:var(--info);text-decoration:none;font-size:11px}
+.file-link:hover{text-decoration:underline}
+.senior-tag{background:#fff8e1;color:#b45309;border:1px solid #fde68a;border-radius:4px;font-size:10px;padding:1px 5px;font-weight:700;margin-left:4px}
+.section-divider{font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.checklist-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;background:#f8fafc;margin-bottom:6px;font-size:12px}
+.checklist-item .ci-label{flex:1;color:var(--muted)}
+.ci-yes{color:var(--accent)}.ci-no{color:var(--danger)}.ci-na{color:var(--muted)}
+.post-meeting-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.pmb-complete{background:#e8f5e9;color:var(--accent)}
+.pmb-pending{background:#fff3e0;color:#e65100}
+.pmb-missing{background:#ffebee;color:var(--danger)}
+.table-wrap{overflow-x:scroll;overflow-y:visible;width:100%;display:block}
+.table-wrap::-webkit-scrollbar{height:10px;display:block}
+.table-wrap::-webkit-scrollbar-track{background:#e8edf2;border-radius:4px}
+.table-wrap::-webkit-scrollbar-thumb{background:#9aa5b4;border-radius:4px;min-width:40px}
+.table-wrap::-webkit-scrollbar-thumb:hover{background:#6b7280}
+.table-wrap{scrollbar-width:thin;scrollbar-color:#9aa5b4 #e8edf2}
+.cal-day-header{background:var(--primary);color:#fff;text-align:center;padding:8px 4px;font-size:12px;font-weight:700;letter-spacing:.5px}
+.cal-day{background:#fff;min-height:110px;padding:6px;cursor:pointer;transition:.15s}
+.cal-day:hover{background:#f0f4f8}
+.cal-day.today{background:#e8f0fe}
+.cal-day.other-month{background:#f8fafc}
+.cal-day.other-month .cal-day-num span{color:#ccc}
+.cal-day-num{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.today-num{background:var(--primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px}
+.cal-pill{font-size:10px;padding:2px 5px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;display:block;line-height:1.4}
+.cal-pill-regular{background:#e3f2fd;color:#1565c0}
+.cal-pill-annual{background:#e8f5e9;color:#2e7d32}
+.cal-pill-budget{background:#fff3e0;color:#e65100}
+.cal-pill-annual-budget{background:#f3e5f5;color:#7b1fa2}
+.cal-pill-above{background:#fce4ec;color:#c62828}
+.cal-pill-special{background:#fff8e1;color:#b45309}
+.cal-more{font-size:10px;color:var(--muted);padding:1px 4px;cursor:pointer}
+.cal-deadline-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:2px;vertical-align:middle}
+.dot-agenda{background:#1565c0}
+.dot-packet{background:#e65100}
+@media(max-width:768px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-logo">
+    <svg width="44" height="36" viewBox="0 0 44 36" fill="none">
+      <rect x="16" y="4" width="5" height="13" stroke="#fff" stroke-width="1.5" fill="none"/>
+      <rect x="22" y="7" width="4" height="10" stroke="#fff" stroke-width="1.5" fill="none"/>
+      <rect x="27" y="9" width="5" height="8" stroke="#fff" stroke-width="1.5" fill="none"/>
+      <path d="M2 22 Q22 10 42 20" stroke="#3a8c3f" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div class="header-title">First Community Management<span>HOA Compliance Tracker</span></div>
+  </div>
+  <span class="clock" id="clock"></span>
+</header>
+<div class="fcm-bar"></div>
+<nav>
+  <button class="active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
+  <button onclick="showPage('meetings',this)">📅 Meetings</button>
+  <button onclick="showPage('calendar',this)">📆 Calendar</button>
+  <button onclick="showPage('submissions',this)">📁 Pre-Meeting Submissions</button>
+  <button onclick="showPage('postmeeting',this)">✅ Post-Meeting Checklists</button>
+  <button onclick="showPage('analytics',this)">📈 Analytics</button>
+  <button onclick="showPage('managers',this)">👥 Managers</button>
+  <button onclick="showPage('settings',this)">⚙️ Settings</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="section-header">
+    <h2>Dashboard</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <select id="dash-filter-manager" onchange="renderDashboard()" style="width:170px;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"><option value="">All Managers</option></select>
+      <select id="dash-filter-team" onchange="renderDashboard()" style="width:120px;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px"><option value="">All Teams</option><option>Blue Team</option><option>Green Team</option></select>
+    </div>
+  </div>
+  <div class="grid4" style="margin-bottom:18px" id="dash-stats"></div>
+  <div class="grid4" style="margin-bottom:16px">
+    <div class="card"><h3>📋 Agendas Due This Week</h3><div id="dash-dl-tw-agenda"></div></div>
+    <div class="card"><h3>📦 Board Packets Due This Week</h3><div id="dash-dl-tw-packet"></div></div>
+    <div class="card"><h3>📋 Agendas Due Next Week</h3><div id="dash-dl-nw-agenda"></div></div>
+    <div class="card"><h3>📦 Board Packets Due Next Week</h3><div id="dash-dl-nw-packet"></div></div>
+  </div>
+  <div style="margin-bottom:16px"><div class="card"><h3>📆 Meetings This Week</h3><div id="dash-meetings-week"></div></div></div>
+  <div class="grid2">
+    <div class="card"><h3>🚨 Overdue Items</h3><div id="dash-overdue"></div></div>
+    <div class="card"><h3>⏳ Past Meetings Awaiting Checklist</h3><div id="dash-awaiting-checklist"></div></div>
+  </div>
+</div>
+
+<!-- MEETINGS -->
+<div id="page-meetings" class="page">
+  <div class="section-header"><h2>Meetings</h2><button class="btn btn-primary" onclick="openMeetingModal()">+ Add Meeting</button></div>
+  <div class="filter-bar">
+    <select id="mtg-filter-manager" onchange="renderMeetings()"><option value="">All Managers</option></select>
+    <select id="mtg-filter-team" onchange="renderMeetings()"><option value="">All Teams</option><option>Blue Team</option><option>Green Team</option></select>
+    <select id="mtg-filter-assoc" onchange="renderMeetings()" style="max-width:200px"><option value="">All Associations</option></select>
+    <select id="mtg-filter-status" onchange="renderMeetings()"><option value="">All</option><option value="upcoming">Upcoming</option><option value="past">Past</option></select>
+    <input type="date" id="mtg-filter-from" onchange="renderMeetings()" title="From date" style="max-width:140px">
+    <input type="date" id="mtg-filter-to" onchange="renderMeetings()" title="To date" style="max-width:140px">
+    <button class="btn btn-outline btn-sm" onclick="clearMtgFilters()" style="white-space:nowrap">✕ Clear</button>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="table-wrap" style="max-height:70vh;overflow-y:auto;overflow-x:scroll">
+    <table id="meetings-table" style="min-width:1400px">
+      <thead style="position:sticky;top:0;z-index:2">
+        <tr>
+        <th onclick="sortMeetings('assoc')">Assoc</th>
+        <th onclick="sortMeetings('manager')">Manager</th>
+        <th onclick="sortMeetings('role')">Role</th>
+        <th onclick="sortMeetings('team')">Team</th>
+        <th onclick="sortMeetings('date')">Date</th>
+        <th onclick="sortMeetings('type')">Type</th>
+        <th onclick="sortMeetings('format')">Format</th>
+        <th onclick="sortMeetings('agendaDue')">Agenda Due (Wed -2wk)</th>
+        <th onclick="sortMeetings('supervisorDue')">Pkt → Supervisor (Wed -1wk)</th>
+        <th onclick="sortMeetings('boardDue')">Pkt → Board (Fri -1wk)</th>
+        <th onclick="sortMeetings('status')">Meeting Status</th>
+        <th onclick="sortMeetings('checklist')">Post-Mtg Checklist</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody id="meetings-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div id="page-calendar" class="page">
+  <div class="section-header">
+    <h2>Meeting Calendar</h2>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="calPrevMonth()">‹ Prev</button>
+      <strong id="cal-month-label" style="font-size:15px;min-width:140px;text-align:center"></strong>
+      <button class="btn btn-outline" onclick="calNextMonth()">Next ›</button>
+      <button class="btn btn-outline btn-sm" onclick="calGoToday()">Today</button>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <select id="cal-filter-manager" onchange="renderCalendar()"><option value="">All Managers</option></select>
+    <select id="cal-filter-team" onchange="renderCalendar()"><option value="">All Teams</option><option>Blue Team</option><option>Green Team</option></select>
+    <select id="cal-filter-type" onchange="renderCalendar()"><option value="">All Types</option><option>Regular</option><option>Annual</option><option>Budget</option><option>Annual/Budget</option><option>Rule Adoption</option><option>Special Assessment</option><option>Above Contract</option></select>
+  </div>
+  <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;background:var(--border);border-radius:10px;overflow:hidden"></div>
+  <div id="cal-detail" style="display:none;margin-top:16px" class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <strong id="cal-detail-title" style="font-size:14px"></strong>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('cal-detail').style.display='none'">✕ Close</button>
+    </div>
+    <div id="cal-detail-body"></div>
+  </div>
+</div>
+
+<!-- PRE-MEETING SUBMISSIONS -->
+<div id="page-submissions" class="page">
+  <div class="section-header"><h2>Pre-Meeting Submissions</h2><button class="btn btn-primary" onclick="openSubModal()">+ Manual Submission</button></div>
+  <div class="filter-bar">
+    <select id="sub-filter-manager" onchange="renderSubmissions()"><option value="">All Managers</option></select>
+    <select id="sub-filter-type" onchange="renderSubmissions()"><option value="">All Types</option><option>Agenda</option><option>Board Packet</option></select>
+    <select id="sub-filter-subtype" onchange="renderSubmissions()"><option value="">All Routes</option><option value="For Supervisor Review">For Supervisor Review</option><option value="Distributed to Board (Senior CM)">Distributed to Board</option></select>
+    <select id="sub-filter-status" onchange="renderSubmissions()"><option value="">All Statuses</option><option>Submitted</option><option>Approved</option><option>Pending</option></select>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap" style="max-height:70vh;overflow-y:auto;overflow-x:scroll"><table><thead style="position:sticky;top:0;z-index:2"><tr><th>Submitted</th><th>CM</th><th>Role</th><th>Team</th><th>Assoc</th><th>Meeting Date</th><th>Type</th><th>Route</th><th>Includes</th><th>File</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="submissions-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- POST-MEETING CHECKLISTS -->
+<div id="page-postmeeting" class="page">
+  <div class="section-header"><h2>Post-Meeting Checklists</h2><button class="btn btn-primary" onclick="openPostMeetingModal()">+ Manual Entry</button></div>
+  <div class="filter-bar">
+    <select id="pm-filter-manager" onchange="renderPostMeeting()"><option value="">All Managers</option></select>
+    <select id="pm-filter-team" onchange="renderPostMeeting()"><option value="">All Teams</option><option>Blue Team</option><option>Green Team</option></select>
+    <select id="pm-filter-complete" onchange="renderPostMeeting()"><option value="">All</option><option value="complete">All Complete</option><option value="partial">Partially Complete</option></select>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap" style="max-height:70vh;overflow-y:auto;overflow-x:scroll"><table><thead style="position:sticky;top:0;z-index:2"><tr><th>Submitted</th><th>CM</th><th>Team</th><th>Assoc</th><th>Meeting Date</th><th>Type</th><th>Minutes Saved</th><th>Draft Minutes</th><th>Action Items</th><th>Weekly Summary</th><th>Proposals</th><th>Docs Uploaded</th><th>Next Mtg</th><th>Calendars</th><th>Overall</th><th>Actions</th></tr></thead>
+    <tbody id="postmeeting-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<div id="page-analytics" class="page">
+  <div class="section-header">
+    <h2>Manager Performance Analytics</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="an-filter-manager" onchange="renderAnalytics()" style="padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:170px"><option value="">All Managers</option></select>
+      <select id="an-filter-team" onchange="renderAnalytics()" style="padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:130px"><option value="">All Teams</option><option>Blue Team</option><option>Green Team</option></select>
+      <select id="an-filter-period" onchange="toggleDateRange()" style="padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:160px">
+        <option value="lastweek">Last Week</option>
+        <option value="month">This Month</option>
+        <option value="quarter">This Quarter</option>
+        <option value="rolling30">Rolling 30 Days</option>
+        <option value="rolling60">Rolling 60 Days</option>
+        <option value="rolling90">Rolling 90 Days</option>
+        <option value="custom">Custom Date Range</option>
+        <option value="all" selected>All Time</option>
+      </select>
+      <div id="an-date-range" style="display:none;gap:6px;align-items:center;flex-wrap:wrap">
+        <input type="date" id="an-date-from" onchange="renderAnalytics()" style="padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:140px">
+        <span style="font-size:12px;color:var(--muted)">to</span>
+        <input type="date" id="an-date-to" onchange="renderAnalytics()" style="padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:140px">
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Row -->
+  <div class="grid4" style="margin-bottom:18px" id="an-kpis"></div>
+
+  <!-- Charts Row 1 -->
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card">
+      <h3>📊 Compliance Rate by Manager</h3>
+      <div id="an-chart-manager" style="overflow-y:auto;max-height:420px"></div>
+    </div>
+    <div class="card">
+      <h3>🔵🟢 Blue Team vs Green Team</h3>
+      <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:var(--muted)">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:#1565c0;display:inline-block"></span>Blue Team</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:#2e7d32;display:inline-block"></span>Green Team</span>
+      </div>
+      <div id="an-team-chart-wrap" style="position:relative;width:100%;height:280px">
+        <canvas id="an-chart-team" role="img" aria-label="Grouped bar chart comparing Blue Team and Green Team compliance rates across four metrics"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card">
+      <h3>📅 Performance Over Time</h3>
+      <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:var(--muted)">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:20px;height:2px;background:#1a4f8a;display:inline-block"></span>Submission compliance</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:20px;height:2px;background:#3a8c3f;border-top:2px dashed #3a8c3f;display:inline-block"></span>Checklist completion</span>
+      </div>
+      <div style="position:relative;width:100%;height:240px">
+        <canvas id="an-chart-time" role="img" aria-label="Line chart showing compliance and checklist rates over time"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h3>⏱ Average Days Late by Manager</h3>
+      <div id="an-chart-late" style="overflow-y:auto;max-height:280px"></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 3 -->
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card">
+      <h3>✅ Post-Meeting Checklist Completion</h3>
+      <div id="an-chart-checklist" style="overflow-y:auto;max-height:380px"></div>
+    </div>
+    <div class="card">
+      <h3>🚫 Meetings With No Submissions</h3>
+      <div id="an-chart-nosubmit" style="overflow-y:auto;max-height:380px"></div>
+    </div>
+  </div>
+</div>
+<div id="page-managers" class="page">
+  <div class="section-header"><h2>Manager Portfolio Overview</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="openReassignModal()">🔄 Reassign Associations</button>
+      <button class="btn btn-primary" onclick="openManagerModal()">+ Add Manager</button>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <select id="mgr-filter-team" onchange="renderManagers()"><option value="">All Teams</option><option>Blue Team</option><option>Green Team</option></select>
+    <select id="mgr-filter-role" onchange="renderManagers()"><option value="">All Roles</option><option value="CM">Community Manager</option><option value="Senior CM">Senior CM</option></select>
+  </div>
+  <div id="managers-grid" class="grid2"></div>
+</div>
+
+<!-- SETTINGS -->
+<div id="page-settings" class="page">
+  <h2 style="margin-bottom:16px">Settings &amp; Integrations</h2>
+  <div class="grid2">
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <h3>Google Sheets Sync</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Pull live submissions from your JotForm-connected Google Sheets.</p>
+        <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;font-size:12px">
+          <div style="margin-bottom:4px"><strong>📋 Pre-Meeting Submissions Sheet</strong></div>
+          <div style="color:var(--muted);font-family:monospace;font-size:11px">1bFpJxm1n2saQ4aeDMebVRY8kdwoFqhi56azU5r5R5XE</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px">
+          <div style="margin-bottom:4px"><strong>✅ Post-Meeting Checklist Sheet</strong></div>
+          <div style="color:var(--muted);font-family:monospace;font-size:11px">18dwFnfNRSViTg-EugsPVqYuMk711EaKEmC5A_6tSoiY</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button class="btn btn-primary" onclick="syncFromSheets()" id="sync-btn">🔄 Sync Now</button>
+          <button class="btn btn-outline" onclick="toggleAutoSync()" id="auto-sync-btn">⏱ Enable Auto-Sync</button>
+        </div>
+        <div id="sync-status" style="font-size:12px;color:var(--muted);min-height:18px"></div>
+      </div>
+      <div class="card">
+        <h3>Simulate Webhooks</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="simulatePreMeetingWebhook()">📋 Simulate Pre-Meeting</button>
+          <button class="btn btn-success" onclick="simulatePostMeetingWebhook()">✅ Simulate Post-Meeting</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <h3>Deadline Rules</h3>
+        <div style="font-size:13px;line-height:2;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid var(--border)">
+          <div>📋 <strong>Agenda Due:</strong> Wednesday, 2 weeks before the meeting</div>
+          <div>📦 <strong>Board Packet → Supervisor:</strong> Wednesday, 1 week before <em style="color:var(--muted)">(CM only)</em></div>
+          <div>📬 <strong>Board Packet → Board:</strong> Friday, 1 week before</div>
+          <div>✅ <strong>Post-Meeting Checklist:</strong> 3 business days after the meeting</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Column Mapping — Pre-Meeting</h3>
+        <table><thead><tr><th>Sheet Column</th><th>Tracker Field</th></tr></thead><tbody>
+          <tr><td>Submission Date</td><td>submittedAt</td></tr>
+          <tr><td>CM</td><td>manager</td></tr>
+          <tr><td>CM Team</td><td>team</td></tr>
+          <tr><td>Association</td><td>assoc</td></tr>
+          <tr><td>Meeting Date</td><td>meetingDate</td></tr>
+          <tr><td>Meeting Type</td><td>meetingType</td></tr>
+          <tr><td>Agenda or Board Packet</td><td>type</td></tr>
+          <tr><td>Submission Type</td><td>subtype</td></tr>
+          <tr><td>Board Packet Includes</td><td>includes</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REASSIGN MODAL -->
+<div class="modal-overlay" id="reassign-modal">
+  <div class="modal" style="width:620px">
+    <button class="modal-close" onclick="closeModal('reassign-modal')">×</button>
+    <h2>Reassign / Add Associations</h2>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px"><label>Filter by Code</label><input type="text" id="reassign-search" oninput="renderReassignList()" placeholder="e.g. OAKW"></div>
+      <div style="flex:1;min-width:160px"><label>Filter by Manager</label><select id="reassign-filter-mgr" onchange="renderReassignList()"><option value="">All Managers</option></select></div>
+    </div>
+    <div style="max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <table><thead><tr><th>Code</th><th>Current Manager</th><th>Reassign To</th></tr></thead><tbody id="reassign-tbody"></tbody></table>
+    </div>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <div class="section-divider" style="margin-bottom:10px">Add New Association</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:90px"><label>Code *</label><input type="text" id="new-assoc-code" maxlength="10" placeholder="ABCD" style="text-transform:uppercase"></div>
+        <div style="flex:2;min-width:150px"><label>Name</label><input type="text" id="new-assoc-name" placeholder="e.g. Oak Park Condos"></div>
+        <div style="flex:2;min-width:150px"><label>Manager *</label><select id="new-assoc-mgr"></select></div>
+        <div><button class="btn btn-success" onclick="addNewAssociation()">+ Add</button></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-outline" onclick="closeModal('reassign-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveReassignments()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- MEETING MODAL -->
+<div class="modal-overlay" id="meeting-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('meeting-modal')">×</button>
+    <h2 id="meeting-modal-title">Add Meeting</h2>
+    <div class="form-row"><label>Community Manager *</label>
+      <select id="m-manager" onchange="updateManagerRole('m-role-display','m-manager');updateDeadlinePreview()"></select>
+      <div id="m-role-display" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+    </div>
+    <div class="form-row"><label>Association Code *</label><input type="text" id="m-assoc" maxlength="10" placeholder="e.g. OAKW"></div>
+    <div class="form-row"><label>Meeting Date *</label><input type="date" id="m-date" oninput="updateDeadlinePreview()"></div>
+    <div class="form-row"><label>Meeting Type *</label>
+      <select id="m-type"><option>Regular</option><option>Annual</option><option>Budget</option><option>Rule Adoption</option><option>Special Assessment</option></select>
+    </div>
+    <div class="form-row"><label>Meeting Format</label>
+      <select id="m-format"><option>Virtual</option><option>In-Person</option><option>Hybrid (board in-person, CM virtual)</option></select>
+    </div>
+    <div class="form-row"><label>Notes</label><textarea id="m-notes" rows="2"></textarea></div>
+    <div style="background:#f0f7ff;padding:11px;border-radius:8px;margin-bottom:14px;font-size:12px;line-height:1.9" id="m-deadlines-preview">Enter a meeting date to see auto-calculated deadlines.</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal('meeting-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMeeting()">Save Meeting</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUBMISSION MODAL -->
+<div class="modal-overlay" id="sub-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('sub-modal')">×</button>
+    <h2>Manual Pre-Meeting Submission</h2>
+    <div class="form-row"><label>Community Manager *</label>
+      <select id="s-manager" onchange="updateManagerRole('s-role-display','s-manager')"></select>
+      <div id="s-role-display" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+    </div>
+    <div class="form-row"><label>Association Code *</label><input type="text" id="s-assoc" maxlength="10" placeholder="e.g. OAKW"></div>
+    <div class="form-row"><label>Meeting Date *</label><input type="date" id="s-date"></div>
+    <div class="form-row"><label>Meeting Type</label>
+      <select id="s-meetingtype"><option>Regular</option><option>Annual</option><option>Budget</option><option>Rule Adoption</option><option>Special Assessment</option></select>
+    </div>
+    <div class="form-row"><label>Document Type *</label><select id="s-type"><option>Agenda</option><option>Board Packet</option></select></div>
+    <div class="form-row"><label>Submission Route *</label>
+      <select id="s-subtype"><option>For Supervisor Review</option><option>Distributed to Board (Senior CM)</option></select>
+    </div>
+    <div class="form-row"><label>Board Packet Includes</label>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px" id="s-includes-checks">
+        <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px;width:auto"><input type="checkbox" value="Agenda"> Agenda</label>
+        <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px;width:auto"><input type="checkbox" value="Minutes"> Minutes</label>
+        <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px;width:auto"><input type="checkbox" value="Management Report"> Mgmt Report</label>
+        <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px;width:auto"><input type="checkbox" value="Action Item List"> Action Items</label>
+        <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px;width:auto"><input type="checkbox" value="Management Plan"> Mgmt Plan</label>
+        <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px;width:auto"><input type="checkbox" value="22.1"> 22.1</label>
+        <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px;width:auto"><input type="checkbox" value="Supporting Documents"> Supporting Docs</label>
+        <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px;width:auto"><input type="checkbox" value="Budget"> Budget</label>
+      </div>
+    </div>
+    <div class="form-row"><label>File Name / Link</label><input type="text" id="s-file" placeholder="e.g. OAKW_BoardPacket.pdf"></div>
+    <div class="form-row"><label>Notes</label><textarea id="s-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal('sub-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSubmission()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- POST-MEETING MODAL -->
+<div class="modal-overlay" id="postmeeting-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('postmeeting-modal')">×</button>
+    <h2>Post-Meeting Checklist Entry</h2>
+    <div class="form-row"><label>Community Manager *</label><select id="pm-manager"></select></div>
+    <div class="form-row"><label>Association Code *</label><input type="text" id="pm-assoc" maxlength="10" placeholder="e.g. OAKW"></div>
+    <div class="form-row"><label>Meeting Date *</label><input type="date" id="pm-date"></div>
+    <div class="form-row"><label>Meeting Type</label><select id="pm-meetingtype"><option>Regular</option><option>Annual</option><option>Budget</option><option>Rule Adoption</option><option>Special Assessment</option></select></div>
+    <div class="section-divider">Minutes</div>
+    <div class="form-row"><label>Approved minutes saved as PDF, in COTA &amp; CincWebAxis *</label><select id="pm-minutes-saved"><option value="Yes">Yes</option><option value="No">No</option><option value="No Minutes Approved">No Minutes Approved</option></select></div>
+    <div class="form-row"><label>Draft minutes saved *</label><select id="pm-draft-minutes"><option value="Yes">Yes</option><option value="Not Received">Not Received</option></select></div>
+    <div class="section-divider">Action Items</div>
+    <div class="form-row"><label>Board Action Items created in CINC *</label><select id="pm-action-items"><option value="Completed">Completed</option><option value="Not Done">Not Done</option></select></div>
+    <div class="form-row"><label>Weekly Status Summary sent *</label><select id="pm-weekly-summary"><option value="Completed">Completed</option><option value="N/A">N/A</option></select></div>
+    <div class="section-divider">Proposals &amp; Contracts</div>
+    <div class="form-row"><label>Proposals/contracts sent for signature *</label><select id="pm-proposals-sent"><option value="Done">Done</option><option value="N/A">N/A</option></select></div>
+    <div class="form-row"><label>Signed copies saved in COTA &amp; CincWebAxis *</label><select id="pm-signed-saved"><option value="COTA Done">COTA Done</option><option value="CincWebAxis Done">CincWebAxis Done</option><option value="Both Done">Both Done</option><option value="N/A">N/A</option></select></div>
+    <div class="form-row"><label>Email copies sent to vendors *</label><select id="pm-vendor-emails"><option value="Done">Done</option><option value="N/A">N/A</option></select></div>
+    <div class="form-row"><label>Board packet &amp; docs uploaded to CincWebAxis *</label><select id="pm-docs-uploaded"><option value="Done">Done</option><option value="Not Done">Not Done</option></select></div>
+    <div class="section-divider">Next Meeting</div>
+    <div class="form-row"><label>Next meeting invitation created &amp; sent *</label><select id="pm-next-meeting"><option value="Meeting Scheduled">Meeting Scheduled</option><option value="Meeting Invite Sent">Meeting Invite Sent</option><option value="Both">Both Done</option></select></div>
+    <div class="form-row"><label>FCM Shared Calendar, Meeting Tracker &amp; CincWebAxis updated *</label><select id="pm-calendars"><option value="All Done">All Done</option><option value="Shared Calendar Done">Shared Calendar Done</option><option value="Meeting Tracker Done">Meeting Tracker Done</option><option value="CincWebAxis Done">CincWebAxis Done</option></select></div>
+    <div class="form-row"><label>Notes</label><textarea id="pm-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal('postmeeting-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePostMeeting()">Save Checklist</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGER MODAL -->
+<div class="modal-overlay" id="manager-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('manager-modal')">×</button>
+    <h2 id="mgr-modal-title">Add Manager</h2>
+    <div class="form-row"><label>Full Name *</label><input type="text" id="mgr-name"></div>
+    <div class="form-row"><label>Email</label><input type="email" id="mgr-email"></div>
+    <div class="form-row"><label>Team *</label><select id="mgr-team"><option>Blue Team</option><option>Green Team</option></select></div>
+    <div class="form-row"><label>Role *</label><select id="mgr-role"><option value="CM">Community Manager (CM)</option><option value="Senior CM">Senior Community Manager (Senior CM)</option></select></div>
+    <p style="font-size:12px;color:var(--muted);background:#fffbf0;padding:8px;border-radius:6px;border-left:3px solid #e65100;margin-bottom:8px"><strong>Senior CMs</strong> are exempt from Supervisor review but still submit directly to the board.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal('manager-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveManagerEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKLIST DETAIL MODAL -->
+<div class="modal-overlay" id="checklist-detail-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('checklist-detail-modal')">×</button>
+    <h2 id="cd-title">Post-Meeting Checklist Detail</h2>
+    <div id="cd-body"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn btn-outline" onclick="closeModal('checklist-detail-modal')">Close</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let teamChartInstance=null;
+let timeChartInstance=null;
+// ═══════════════════════════════════════════════════════════════
+// THE ONE AND ONLY deadline calculation function in this file
+// ═══════════════════════════════════════════════════════════════
+function calcDeadlines(dateStr, managerName) {
+  // dateStr = 'YYYY-MM-DD'
+  // Returns { boardPacketDue, supervisorDue, agendaDue, isSenior }
+  // all as Date objects
+  const senior = (MANAGERS.find(x => x.name === managerName) || {}).role === 'Senior CM';
+
+  const meet = new Date(dateStr + 'T12:00:00');
+
+  // Step 1: Monday of the meeting's week
+  // getDay(): 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
+  const dow = meet.getDay();
+  const daysBackToMon = (dow === 0) ? 6 : (dow - 1);
+  const monMeetWeek = new Date(meet);
+  monMeetWeek.setDate(meet.getDate() - daysBackToMon);
+  // monMeetWeek is now Monday 00:00 of the meeting's week
+
+  // Step 2: Friday of the PRIOR week = monMeetWeek - 3 days
+  // Mon - 1 = Sun, Mon - 2 = Sat, Mon - 3 = Fri  ✓
+  const boardPacketDue = new Date(monMeetWeek);
+  boardPacketDue.setDate(monMeetWeek.getDate() - 3);
+
+  // Step 3: Wednesday of the prior week = boardPacketDue - 2 days
+  const supervisorDue = senior ? null : new Date(boardPacketDue);
+  if (!senior) supervisorDue.setDate(boardPacketDue.getDate() - 2);
+
+  // Step 4: Agenda = Wednesday 7 days before supervisorDue
+  // (= Wed of 2 weeks prior)
+  const wednesdayPriorWeek = senior
+    ? new Date(boardPacketDue.getTime() - 2 * 86400000)
+    : new Date(supervisorDue);
+  const agendaDue = new Date(wednesdayPriorWeek);
+  agendaDue.setDate(wednesdayPriorWeek.getDate() - 7);
+
+  return { boardPacketDue, supervisorDue, agendaDue, isSenior: senior };
+}
+
+// Wrapper used everywhere else in the code
+function getDeadlines(meeting) {
+  if (!meeting || !meeting.date) return { agendaDue:null, supervisorDue:null, boardPacketDue:null, isSenior:false };
+  return calcDeadlines(meeting.date, meeting.manager);
+}
+// ═══════════════════════════════════════════════════════════════
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+let MANAGERS = JSON.parse(localStorage.getItem('fcm_managers')||'null') || [
+  {name:"Alexandria Woods",team:"Blue Team",email:"awoods@fcm.com",role:"CM"},
+  {name:"Amy Wukotich",team:"Blue Team",email:"awukotich@fcm.com",role:"CM"},
+  {name:"Bradynn Wolfe",team:"Green Team",email:"bwolfe@fcm.com",role:"CM"},
+  {name:"Corey Newsome",team:"Green Team",email:"cnewsome@fcm.com",role:"Senior CM"},
+  {name:"Emmanuel Zavala",team:"Blue Team",email:"ezavala@fcm.com",role:"CM"},
+  {name:"Erica Asare",team:"Green Team",email:"easare@fcm.com",role:"CM"},
+  {name:"Jack Wanninger",team:"Blue Team",email:"jwanninger@fcm.com",role:"Senior CM"},
+  {name:"Jacob Kroll",team:"Green Team",email:"jkroll@fcm.com",role:"CM"},
+  {name:"Jade Coleman",team:"Blue Team",email:"jcoleman@fcm.com",role:"CM"},
+  {name:"John Diebel",team:"Green Team",email:"jdiebel@fcm.com",role:"CM"},
+  {name:"John Kinay",team:"Blue Team",email:"jkinay@fcm.com",role:"CM"},
+  {name:"Kevin Phillips",team:"Green Team",email:"kphillips@fcm.com",role:"CM"},
+  {name:"Maggie Lyons",team:"Blue Team",email:"mlyons@fcm.com",role:"Senior CM"},
+  {name:"Michelle Eckroth",team:"Green Team",email:"meckroth@fcm.com",role:"CM"},
+  {name:"Nick Marine",team:"Blue Team",email:"nmarine@fcm.com",role:"CM"},
+  {name:"Paul Pekofske",team:"Green Team",email:"ppekofske@fcm.com",role:"CM"},
+  {name:"Rich Green",team:"Blue Team",email:"rgreen@fcm.com",role:"CM"},
+  {name:"Russ Fleagle",team:"Green Team",email:"rfleagle@fcm.com",role:"CM"},
+  {name:"Suzettte Montiel",team:"Blue Team",email:"smontiel@fcm.com",role:"CM"}
+];
+
+let meetings     = JSON.parse(localStorage.getItem('fcm_meetings')||'[]').filter(m=>m.date>='2026-04-10');
+let submissions  = JSON.parse(localStorage.getItem('fcm_submissions')||'[]');
+let postMeetings = JSON.parse(localStorage.getItem('fcm_postmeetings')||'[]');
+let editingMeetingId=null, editingManagerName=null;
+
+function save(){
+  localStorage.setItem('fcm_managers',JSON.stringify(MANAGERS));
+  localStorage.setItem('fcm_meetings',JSON.stringify(meetings));
+  localStorage.setItem('fcm_submissions',JSON.stringify(submissions));
+  localStorage.setItem('fcm_postmeetings',JSON.stringify(postMeetings));
+}
+
+// ── MANAGER / DATE HELPERS ────────────────────────────────────────────────────
+function isSeniorCM(name){return MANAGERS.find(x=>x.name===name)?.role==='Senior CM';}
+function findManager(lastName){
+  if(!lastName)return null;
+  const ln=lastName.trim().toLowerCase();
+  return MANAGERS.find(m=>m.name.toLowerCase().split(' ').pop()===ln)||null;
+}
+function parseDate(str){
+  if(!str)return null;
+  str=str.trim();
+  const mdy=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(mdy)return new Date(parseInt(mdy[3]),parseInt(mdy[1])-1,parseInt(mdy[2]));
+  const monthOnly=str.match(/^(\w+)\s+(\d{4})$/);
+  if(monthOnly)return new Date(`${monthOnly[1]} 1, ${monthOnly[2]}`);
+  return new Date(str);
+}
+function addBusinessDays(dateStr,days){
+  const d=new Date(dateStr+'T12:00:00');
+  let added=0;
+  while(added<days){d.setDate(d.getDate()+1);const dow=d.getDay();if(dow!==0&&dow!==6)added++;}
+  return d;
+}
+function checklistDueDate(ds){return addBusinessDays(ds,3);}
+function checklistDueBadge(ds,submitted){
+  if(submitted)return'<span class="badge badge-green">✅ Submitted</span>';
+  const days=daysDiff(checklistDueDate(ds));
+  if(days<0)return`<span class="badge badge-red">Overdue ${Math.abs(days)}d</span>`;
+  if(days===0)return'<span class="badge badge-yellow">Due Today</span>';
+  return`<span class="badge badge-yellow">Due in ${days}d</span>`;
+}
+
+// ── SEED DATA ─────────────────────────────────────────────────────────────────
+localStorage.removeItem('fcm_meetings');
+localStorage.removeItem('fcm_submissions');
+localStorage.removeItem('fcm_postmeetings');
+meetings=[]; submissions=[]; postMeetings=[];
+(()=>{
+  const raw=[
+    ["ADMS","Green","3/26/2026","Regular"],["ADMS","Green","6/25/2026","Annual"],["ADMS","Green","9/24/2026","Regular"],["ADMS","Green","11/19/2026","Budget"],
+    ["TTWC","Newsome","3/1/2026","Regular"],["TTWC","Newsome","5/5/2026","Regular"],["TTWC","Newsome","7/23/2026","Annual"],["TTWC","Newsome","11/3/2026","Budget"],
+    ["LAKE","Kinay","3/4/2026","Regular"],["LAKE","Kinay","6/10/2026","Regular"],["LAKE","Kinay","8/25/2026","Regular"],["LAKE","Kinay","12/3/2026","Annual/Budget"],
+    ["WELL","Kinay","3/11/2026","Regular"],["WELL","Kinay","6/3/2026","Regular"],["WELL","Kinay","9/2/2026","Regular"],["WELL","Kinay","12/1/2026","Annual/Budget"],
+    ["FISL","Montiel","2/17/2026","Regular"],["FISL","Montiel","5/19/2026","Regular"],["FISL","Montiel","8/18/2026","Regular"],["FISL","Montiel","11/10/2026","Annual/Budget"],
+    ["WASH","Wolfe","3/25/2026","Regular"],["WASH","Wolfe","5/13/2026","Regular"],["WASH","Wolfe","9/23/2026","Regular"],["WASH","Wolfe","11/19/2026","Annual/Budget"],
+    ["FAIR","Lyons","3/10/2026","Regular"],["FAIR","Lyons","6/16/2026","Regular"],["FAIR","Lyons","10/6/2026","Regular"],["FAIR","Lyons","11/10/2026","Annual/Budget"],
+    ["ORCA","Lyons","3/2/2026","Regular"],["ORCA","Lyons","5/4/2026","Regular"],["ORCA","Lyons","9/28/2026","Annual"],["ORCA","Lyons","11/30/2026","Budget"],
+    ["WNCA","Montiel","2/2/2026","Regular"],["WNCA","Montiel","5/4/2026","Regular"],["WNCA","Montiel","8/3/2026","Regular"],["WNCA","Montiel","11/2/2026","Annual/Budget"],
+    ["BURL","Diebel","3/5/2026","Regular"],
+    ["MONT","Coleman","2/9/2026","Regular"],["MONT","Coleman","5/11/2026","Annual"],["MONT","Coleman","8/10/2026","Regular"],["MONT","Coleman","11/9/2026","Budget"],
+    ["ALBY","Newsome","1/7/2026","Regular"],["ALBY","Newsome","2/26/2026","Regular"],["ALBY","Newsome","5/7/2026","Regular"],["ALBY","Newsome","8/6/2026","Annual"],["ALBY","Newsome","11/5/2026","Budget"],
+    ["CLAR","Phillips","3/2/2026","Annual"],["CLAR","Phillips","5/18/2026","Regular"],["CLAR","Phillips","8/10/2026","Regular"],["CLAR","Phillips","10/26/2026","Budget"],
+    ["BROM","Wolfe","4/27/2026","Regular"],
+    ["SCHL","Coleman","1/13/2026","Annual"],["SCHL","Coleman","3/11/2026","Regular"],["SCHL","Coleman","6/24/2026","Regular"],["SCHL","Coleman","9/16/2026","Regular"],["SCHL","Coleman","11/18/2026","Annual/Budget"],
+    ["MILW","Zavala","3/4/2026","Regular"],["MILW","Zavala","6/3/2026","Regular"],["MILW","Zavala","9/2/2026","Regular"],["MILW","Zavala","12/2/2026","Annual/Budget"],
+    ["NWSH","Marine","2/4/2026","Regular"],["NWSH","Marine","6/10/2026","Regular"],["NWSH","Marine","9/16/2026","Regular"],["NWSH","Marine","12/9/2026","Annual/Budget"],
+    ["ALTG","Eckroth","1/14/2026","Regular"],["ALTG","Eckroth","4/8/2026","Regular"],["ALTG","Eckroth","7/15/2026","Regular"],["ALTG","Eckroth","10/14/2026","Annual/Budget"],
+    ["AVEB","Zavala","4/16/2026","Regular"],["AVEB","Zavala","7/7/2026","Regular"],["AVEB","Zavala","10/6/2026","Annual/Budget"],
+    ["BALM","Pekofske","2/23/2026","Regular"],["BALM","Pekofske","6/1/2026","Regular"],["BALM","Pekofske","8/17/2026","Budget"],["BALM","Pekofske","11/2/2026","Annual/Budget"],
+    ["BELG","Pekofske","3/25/2026","Regular"],["BELG","Pekofske","5/20/2026","Regular"],["BELG","Pekofske","8/12/2026","Budget"],["BELG","Pekofske","11/18/2026","Annual/Budget"],
+    ["BELL","Wolfe","3/16/2026","Annual"],["BELL","Wolfe","5/11/2026","Regular"],["BELL","Wolfe","8/12/2026","Regular"],["BELL","Wolfe","10/28/2026","Budget"],
+    ["BELH","Lyons","3/26/2026","Regular"],["BELH","Lyons","7/7/2026","Regular"],["BELH","Lyons","9/25/2026","Regular"],["BELH","Lyons","10/29/2026","Annual/Budget"],
+    ["BENN","Diebel","1/12/2026","Regular"],["BENN","Diebel","4/20/2026","Regular"],["BENN","Diebel","6/8/2026","Annual/Budget"],["BENN","Diebel","9/14/2026","Regular"],
+    ["BRCH","Wanninger","1/26/2026","Above Contract"],["BRCH","Wanninger","2/18/2026","Regular"],["BRCH","Wanninger","5/6/2026","Regular"],["BRCH","Wanninger","8/5/2026","Regular"],["BRCH","Wanninger","12/9/2026","Annual/Budget"],
+    ["BRAU","Coleman","2/11/2026","Regular"],["BRAU","Coleman","4/22/2026","Annual"],["BRAU","Coleman","7/8/2026","Regular"],["BRAU","Coleman","11/4/2026","Budget"],
+    ["BKTT","Coleman","6/17/2026","Regular"],["BKTT","Coleman","9/23/2026","Regular"],["BKTT","Coleman","11/11/2026","Annual/Budget"],
+    ["BKTF","Asare","3/1/2026","Regular"],["BKTF","Asare","6/16/2026","Regular"],["BKTF","Asare","9/14/2026","Regular"],["BKTF","Asare","12/3/2026","Annual/Budget"],
+    ["BKTG","Pekofske","4/2/2026","Regular"],["BKTG","Pekofske","6/18/2026","Regular"],["BKTG","Pekofske","9/3/2026","Budget"],["BKTG","Pekofske","10/22/2026","Annual/Budget"],
+    ["BKIW","Newsome","6/23/2026","Regular"],["BKIW","Newsome","9/22/2026","Regular"],["BKIW","Newsome","11/17/2026","Budget"],
+    ["CHAN","Wukotich","3/9/2026","Annual"],["CHAN","Wukotich","5/11/2026","Regular"],["CHAN","Wukotich","7/27/2026","Regular"],["CHAN","Wukotich","10/26/2026","Budget"],
+    ["CHUR","Eckroth","2/10/2026","Regular"],["CHUR","Eckroth","5/12/2026","Regular"],["CHUR","Eckroth","8/11/2026","Regular"],["CHUR","Eckroth","11/10/2026","Annual/Budget"],
+    ["CHUL","Coleman","2/4/2026","Regular"],["CHUL","Coleman","5/6/2026","Regular"],["CHUL","Coleman","8/5/2026","Regular"],["CHUL","Coleman","11/10/2026","Annual/Budget"],
+    ["CINE","Wanninger","2/5/2026","Annual"],["CINE","Wanninger","3/11/2026","Regular"],["CINE","Wanninger","5/13/2026","Regular"],["CINE","Wanninger","7/8/2026","Regular"],["CINE","Wanninger","9/9/2026","Regular"],["CINE","Wanninger","11/18/2026","Budget"],
+    ["CITY","Wukotich","1/26/2026","Regular"],["CITY","Wukotich","3/16/2026","Regular"],["CITY","Wukotich","5/18/2026","Regular"],["CITY","Wukotich","7/20/2026","Above Contract"],["CITY","Wukotich","9/21/2026","Above Contract"],["CITY","Wukotich","11/23/2026","Annual/Budget"],
+    ["CLTA","Eckroth","1/28/2026","Regular"],["CLTA","Eckroth","2/25/2026","Regular"],["CLTA","Eckroth","3/25/2026","Regular"],["CLTA","Eckroth","4/29/2026","Regular"],["CLTA","Eckroth","5/27/2026","Regular"],["CLTA","Eckroth","6/24/2026","Regular"],["CLTA","Eckroth","7/29/2026","Regular"],["CLTA","Eckroth","8/26/2026","Regular"],["CLTA","Eckroth","9/30/2026","Regular"],["CLTA","Eckroth","10/28/2026","Budget"],["CLTA","Eckroth","11/18/2026","Annual"],["CLTA","Eckroth","12/9/2026","Regular"],
+    ["HIST","Diebel","2/17/2026","Regular"],["HIST","Diebel","5/11/2026","Regular"],["HIST","Diebel","8/17/2026","Regular"],["HIST","Diebel","11/16/2026","Annual/Budget"],
+    ["DLNO","Montiel","2/23/2026","Regular"],["DLNO","Montiel","5/18/2026","Regular"],["DLNO","Montiel","8/24/2026","Regular"],["DLNO","Montiel","11/9/2026","Annual/Budget"],
+    ["DPCA","Woods","1/7/2026","Annual"],["DPCA","Woods","4/8/2026","Regular"],["DPCA","Woods","8/3/2026","Regular"],["DPCA","Woods","11/16/2026","Budget"],
+    ["ENSC","Zavala","2/11/2026","Regular"],["ENSC","Zavala","5/6/2026","Regular"],["ENSC","Zavala","8/5/2026","Regular"],["ENSC","Zavala","11/4/2026","Annual/Budget"],
+    ["FULH","Montiel","1/26/2026","Regular"],["FULH","Montiel","2/23/2026","Regular"],["FULH","Montiel","3/30/2026","Regular"],["FULH","Montiel","4/27/2026","Regular"],["FULH","Montiel","5/13/2026","Budget"],["FULH","Montiel","6/26/2026","Regular"],["FULH","Montiel","7/22/2026","Regular"],["FULH","Montiel","8/20/2026","Regular"],["FULH","Montiel","9/24/2026","Regular"],["FULH","Montiel","10/28/2026","Regular"],["FULH","Montiel","11/9/2026","Annual"],
+    ["FULT","Wanninger","2/4/2026","Regular"],["FULT","Wanninger","5/27/2026","Regular"],["FULT","Wanninger","8/19/2026","Annual"],["FULT","Wanninger","11/4/2026","Budget"],
+    ["GART","Zavala","6/16/2026","Regular"],["GART","Zavala","9/15/2026","Regular"],["GART","Zavala","12/9/2026","Annual/Budget"],
+    ["GALL","Zavala","3/10/2026","Regular"],["GALL","Zavala","6/10/2026","Regular"],["GALL","Zavala","9/9/2026","Regular"],["GALL","Zavala","12/8/2026","Annual/Budget"],
+    ["GRAT","Coleman","2/24/2026","Regular"],["GRAT","Coleman","5/5/2026","Regular"],["GRAT","Coleman","8/6/2026","Regular"],["GRAT","Coleman","10/27/2026","Budget"],
+    ["GRAC","Wanninger","3/9/2026","Regular"],["GRAC","Wanninger","5/11/2026","Annual"],["GRAC","Wanninger","9/14/2026","Regular"],["GRAC","Wanninger","11/16/2026","Budget"],
+    ["GREN","Coleman","4/29/2026","Regular"],["GREN","Coleman","6/3/2026","Annual"],["GREN","Coleman","8/11/2026","Regular"],["GREN","Coleman","12/2/2026","Budget"],
+    ["HOWE","Asare","3/3/2026","Annual"],["HOWE","Asare","5/5/2026","Regular"],["HOWE","Asare","8/20/2026","Regular"],["HOWE","Asare","11/12/2026","Budget"],
+    ["HUBB","Wanninger","2/16/2026","Regular"],["HUBB","Wanninger","5/18/2026","Regular"],["HUBB","Wanninger","8/17/2026","Annual"],["HUBB","Wanninger","11/30/2026","Budget"],
+    ["INDI","Zavala","1/13/2026","Regular"],["INDI","Zavala","4/14/2026","Annual"],["INDI","Zavala","7/14/2026","Regular"],["INDI","Zavala","10/13/2026","Budget"],
+    ["JOTL","Diebel","2/12/2026","Regular"],["JOTL","Diebel","5/7/2026","Regular"],["JOTL","Diebel","8/6/2026","Annual"],["JOTL","Diebel","11/5/2026","Budget"],
+    ["KARM","Coleman","2/10/2026","Regular"],["KARM","Coleman","5/20/2026","Budget"],["KARM","Coleman","8/13/2026","Regular"],["KARM","Coleman","10/29/2026","Annual/Budget"],
+    ["KEDM","Phillips","3/24/2026","Regular"],["KEDM","Phillips","5/12/2026","Regular"],["KEDM","Phillips","8/25/2026","Regular"],["KEDM","Phillips","11/3/2026","Annual/Budget"],
+    ["LALG","Lyons","2/24/2026","Regular"],["LALG","Lyons","5/12/2026","Regular"],["LALG","Lyons","8/25/2026","Regular"],["LALG","Lyons","10/27/2026","Annual/Budget"],
+    ["LKPT","Kinay","3/18/2026","Regular"],["LKPT","Kinay","5/27/2026","Regular"],["LKPT","Kinay","8/11/2026","Regular"],["LKPT","Kinay","12/2/2026","Annual/Budget"],
+    ["LARR","Zavala","3/11/2026","Regular"],["LARR","Zavala","6/11/2026","Regular"],["LARR","Zavala","9/10/2026","Annual"],["LARR","Zavala","12/10/2026","Budget"],
+    ["LCB2","Woods","1/27/2026","Annual/Budget"],["LCB2","Woods","4/21/2026","Regular"],["LCB2","Woods","9/15/2026","Regular"],["LCB2","Woods","12/1/2026","Annual/Budget"],
+    ["LTPT","Phillips","2/10/2026","Annual"],["LTPT","Phillips","5/5/2026","Regular"],["LTPT","Phillips","8/19/2026","Regular"],["LTPT","Phillips","11/11/2026","Budget"],
+    ["LPCM","Newsome","3/26/2026","Regular"],["LPCM","Newsome","5/12/2026","Regular"],["LPCM","Newsome","7/28/2026","Regular"],["LPCM","Newsome","10/13/2026","Annual/Budget"],
+    ["LG03","Woods","3/2/2026","Regular"],["LG03","Woods","6/1/2026","Annual"],["LG03","Woods","8/24/2026","Regular"],["LG03","Woods","11/30/2026","Budget"],
+    ["LNGV","Woods","3/4/2026","Regular"],["LNGV","Woods","6/3/2026","Regular"],["LNGV","Woods","9/2/2026","Regular"],["LNGV","Woods","12/2/2026","Annual/Budget"],
+    ["MADC","Lyons","3/3/2026","Regular"],["MADC","Lyons","4/2/2026","Above Contract"],["MADC","Lyons","6/23/2026","Regular"],["MADC","Lyons","9/22/2026","Regular"],["MADC","Lyons","11/3/2026","Annual/Budget"],
+    ["MCCA","Montiel","2/9/2026","Regular"],["MCCA","Montiel","6/8/2026","Regular"],["MCCA","Montiel","9/14/2026","Annual"],["MCCA","Montiel","11/9/2026","Budget"],
+    ["MGCA","Wukotich","2/23/2026","Regular"],["MGCA","Wukotich","6/1/2026","Regular"],["MGCA","Wukotich","8/31/2026","Regular"],["MGCA","Wukotich","11/30/2026","Annual/Budget"],
+    ["MSCA","Pekofske","1/12/2026","Regular"],["MSCA","Pekofske","4/27/2026","Regular"],["MSCA","Pekofske","7/27/2026","Budget"],["MSCA","Pekofske","10/19/2026","Annual/Budget"],
+    ["MARS","Phillips","2/4/2026","Annual"],["MARS","Phillips","3/4/2026","Above Contract"],["MARS","Phillips","5/13/2026","Regular"],["MARS","Phillips","8/26/2026","Regular"],["MARS","Phillips","11/9/2026","Budget"],
+    ["MAYF","Zavala","4/22/2026","Regular"],["MAYF","Zavala","6/17/2026","Regular"],["MAYF","Zavala","9/17/2026","Regular"],["MAYF","Zavala","12/16/2026","Annual/Budget"],
+    ["MKIN","Fleagle","1/27/2026","Above Contract"],["MKIN","Fleagle","3/31/2026","Regular"],["MKIN","Fleagle","5/20/2026","Regular"],["MKIN","Fleagle","9/9/2026","Regular"],["MKIN","Fleagle","11/18/2026","Annual/Budget"],
+    ["MTLW","Wukotich","1/12/2026","Regular"],["MTLW","Wukotich","4/20/2026","Regular"],["MTLW","Wukotich","8/24/2026","Annual"],["MTLW","Wukotich","11/16/2026","Budget"],
+    ["MTRO","Wanninger","2/25/2026","Regular"],["MTRO","Wanninger","6/3/2026","Regular"],["MTRO","Wanninger","8/31/2026","Regular"],["MTRO","Wanninger","11/2/2026","Annual/Budget"],
+    ["METP","Phillips","3/5/2026","Regular"],["METP","Phillips","4/8/2026","Budget"],["METP","Phillips","7/22/2026","Regular"],["METP","Phillips","10/7/2026","Regular"],
+    ["MOTS","Woods","2/10/2026","Budget"],["MOTS","Woods","4/28/2026","Regular"],["MOTS","Woods","6/3/2026","Regular"],["MOTS","Woods","9/2/2026","Regular"],["MOTS","Woods","12/2/2026","Annual/Budget"],
+    ["MLCA","Eckroth","2/11/2026","Regular"],["MLCA","Eckroth","2/24/2026","Above Contract"],["MLCA","Eckroth","5/13/2026","Regular"],["MLCA","Eckroth","8/12/2026","Regular"],["MLCA","Eckroth","11/11/2026","Budget"],
+    ["MORG","Newsome","4/13/2026","Regular"],["MORG","Newsome","5/1/2026","Regular"],["MORG","Newsome","8/11/2026","Regular"],["MORG","Newsome","11/10/2026","Budget"],
+    ["NTMA","Woods","4/30/2026","Regular"],
+    ["OAKC","Diebel","3/10/2026","Annual"],["OAKC","Diebel","5/13/2026","Regular"],["OAKC","Diebel","8/12/2026","Regular"],["OAKC","Diebel","11/11/2026","Budget"],
+    ["OTVW","Wukotich","2/25/2026","Regular"],["OTVW","Wukotich","5/13/2026","Regular"],["OTVW","Wukotich","8/12/2026","Regular"],["OTVW","Wukotich","11/4/2026","Annual/Budget"],
+    ["PARK","Lyons","1/14/2026","Above Contract"],["PARK","Lyons","2/18/2026","Regular"],["PARK","Lyons","5/13/2026","Annual"],["PARK","Lyons","8/19/2026","Regular"],["PARK","Lyons","11/4/2026","Budget"],
+    ["POTT","Pekofske","4/9/2026","Regular"],["POTT","Pekofske","7/13/2026","Annual"],["POTT","Pekofske","10/5/2026","Regular"],["POTT","Pekofske","11/9/2026","Budget"],
+    ["PARV","Kinay","3/3/2026","Regular"],["PARV","Kinay","6/9/2026","Regular"],["PARV","Kinay","9/16/2026","Regular"],["PARV","Kinay","11/18/2026","Annual/Budget"],
+    ["RVNS","Phillips","3/9/2026","Regular"],["RVNS","Phillips","6/8/2026","Regular"],["RVNS","Phillips","9/14/2026","Regular"],["RVNS","Phillips","11/16/2026","Annual/Budget"],
+    ["RPKN","Phillips","3/25/2026","Regular"],["RPKN","Phillips","6/3/2026","Regular"],["RPKN","Phillips","9/9/2026","Regular"],["RPKN","Phillips","11/4/2026","Annual/Budget"],
+    ["RVPT","Marine","4/16/2026","Annual"],["RVPT","Marine","5/4/2026","Regular"],["RVPT","Marine","6/2/2026","Regular"],["RVPT","Marine","9/1/2026","Regular"],["RVPT","Marine","12/1/2026","Budget"],
+    ["RVTH","Kinay","3/30/2026","Regular"],["RVTH","Kinay","6/22/2026","Regular"],["RVTH","Kinay","9/28/2026","Regular"],["RVTH","Kinay","11/9/2026","Annual/Budget"],
+    ["RVTHS","Eckroth","1/26/2026","Regular"],["RVTHS","Eckroth","3/30/2026","Regular"],["RVTHS","Eckroth","5/18/2026","Regular"],["RVTHS","Eckroth","7/27/2026","Regular"],["RVTHS","Eckroth","9/21/2026","Regular"],["RVTHS","Eckroth","11/23/2026","Annual/Budget"],
+    ["RLFT","Kinay","4/15/2026","Regular"],["RLFT","Kinay","7/21/2026","Regular"],["RLFT","Kinay","9/9/2026","Regular"],["RLFT","Kinay","11/4/2026","Annual/Budget"],
+    ["VIEW","Newsome","5/19/2026","Regular"],["VIEW","Newsome","8/13/2026","Regular"],["VIEW","Newsome","11/12/2026","Budget"],
+    ["SMCA","Kinay","3/9/2026","Regular"],["SMCA","Kinay","6/15/2026","Regular"],["SMCA","Kinay","9/14/2026","Regular"],["SMCA","Kinay","11/16/2026","Annual/Budget"],
+    ["SCHO","Wanninger","3/18/2026","Regular"],["SCHO","Wanninger","6/10/2026","Regular"],["SCHO","Wanninger","9/16/2026","Regular"],["SCHO","Wanninger","11/10/2026","Annual/Budget"],
+    ["SHBD","Eckroth","1/13/2026","Regular"],["SHBD","Eckroth","2/17/2026","Above Contract"],["SHBD","Eckroth","3/5/2026","Above Contract"],["SHBD","Eckroth","4/14/2026","Regular"],["SHBD","Eckroth","7/21/2026","Regular"],["SHBD","Eckroth","10/20/2026","Annual/Budget"],
+    ["SHER","Newsome","3/10/2026","Annual"],["SHER","Newsome","6/16/2026","Regular"],["SHER","Newsome","9/1/2026","Regular"],["SHER","Newsome","11/10/2026","Annual/Budget"],
+    ["SHSH","Wukotich","2/18/2026","Regular"],["SHSH","Wukotich","5/20/2026","Regular"],["SHSH","Wukotich","8/19/2026","Regular"],["SHSH","Wukotich","11/18/2026","Annual/Budget"],
+    ["SBCA","Phillips","3/3/2026","Regular"],["SBCA","Phillips","6/23/2026","Annual"],["SBCA","Phillips","9/15/2026","Regular"],["SBCA","Phillips","10/27/2026","Budget"],
+    ["SHWN","Asare","2/25/2026","Regular"],["SHWN","Asare","5/20/2026","Regular"],["SHWN","Asare","8/19/2026","Annual"],["SHWN","Asare","10/28/2026","Budget"],
+    ["BARR","Zavala","1/12/2026","Regular"],["BARR","Zavala","4/13/2026","Annual"],["BARR","Zavala","7/13/2026","Regular"],["BARR","Zavala","10/12/2026","Budget"],
+    ["SMIT","Woods","3/11/2026","Regular"],["SMIT","Woods","6/9/2026","Regular"],["SMIT","Woods","9/9/2026","Regular"],["SMIT","Woods","12/9/2026","Annual/Budget"],
+    ["SAUG","Wukotich","1/28/2026","Regular"],["SAUG","Wukotich","4/29/2026","Annual"],["SAUG","Wukotich","7/29/2026","Regular"],["SAUG","Wukotich","10/28/2026","Budget"],
+    ["SPRT","Coleman","4/1/2026","Regular"],["SPRT","Coleman","7/1/2026","Regular"],["SPRT","Coleman","10/7/2026","Regular"],["SPRT","Coleman","12/9/2026","Annual/Budget"],
+    ["STJM","Phillips","2/25/2026","Annual"],["STJM","Phillips","5/6/2026","Regular"],["STJM","Phillips","8/5/2026","Regular"],["STJM","Phillips","10/14/2026","Budget"],
+    ["STJN","Pekofske","2/12/2026","Regular"],["STJN","Pekofske","5/14/2026","Regular"],["STJN","Pekofske","8/27/2026","Budget"],["STJN","Pekofske","11/5/2026","Annual/Budget"],
+    ["SABC","Phillips","4/21/2026","Regular"],
+    ["SUPR","Wolfe","2/19/2026","Regular"],["SUPR","Wolfe","5/28/2026","Regular"],["SUPR","Wolfe","8/20/2026","Regular"],["SUPR","Wolfe","11/19/2026","Annual/Budget"],
+    ["SWTR","Newsome","5/21/2026","Regular"],["SWTR","Newsome","8/25/2026","Regular"],["SWTR","Newsome","11/17/2026","Budget"],
+    ["TAMA","Eckroth","3/10/2026","Regular"],["TAMA","Eckroth","6/16/2026","Regular"],["TAMA","Eckroth","9/15/2026","Regular"],["TAMA","Eckroth","10/21/2026","Annual/Budget"],
+    ["TAMR","Eckroth","3/11/2026","Regular"],["TAMR","Eckroth","6/17/2026","Regular"],["TAMR","Eckroth","9/16/2026","Regular"],["TAMR","Eckroth","11/17/2026","Annual/Budget"],
+    ["BERT","Diebel","3/25/2026","Regular"],["BERT","Diebel","6/4/2026","Regular"],["BERT","Diebel","9/3/2026","Regular"],["BERT","Diebel","11/19/2026","Annual/Budget"],
+    ["SCOT","Wolfe","1/20/2026","Regular"],["SCOT","Wolfe","2/17/2026","Regular"],["SCOT","Wolfe","3/31/2026","Regular"],["SCOT","Wolfe","4/21/2026","Regular"],["SCOT","Wolfe","5/19/2026","Regular"],["SCOT","Wolfe","6/16/2026","Annual"],["SCOT","Wolfe","7/21/2026","Regular"],["SCOT","Wolfe","8/18/2026","Regular"],["SCOT","Wolfe","9/15/2026","Regular"],["SCOT","Wolfe","10/20/2026","Above Contract"],["SCOT","Wolfe","11/17/2026","Budget"],["SCOT","Wolfe","12/15/2026","Above Contract"],
+    ["VINT","Woods","4/1/2026","Regular"],["VINT","Woods","6/17/2026","Regular"],["VINT","Woods","9/16/2026","Regular"],["VINT","Woods","11/18/2026","Annual/Budget"],
+    ["TOWR","Wolfe","2/24/2026","Regular"],["TOWR","Wolfe","3/23/2026","Annual"],["TOWR","Wolfe","6/2/2026","Regular"],["TOWR","Wolfe","8/4/2026","Regular"],["TOWR","Wolfe","11/3/2026","Budget"],
+    ["THDP","Zavala","3/3/2026","Regular"],["THDP","Zavala","6/2/2026","Regular"],["THDP","Zavala","9/1/2026","Regular"],["THDP","Zavala","12/1/2026","Annual/Budget"],
+    ["ASTR","Wukotich","2/23/2026","Regular"],["ASTR","Wukotich","4/13/2026","Budget"],["ASTR","Wukotich","6/15/2026","Regular"],["ASTR","Wukotich","7/15/2026","Annual"],["ASTR","Wukotich","8/17/2026","Regular"],["ASTR","Wukotich","10/19/2026","Regular"],["ASTR","Wukotich","12/14/2026","Regular"],
+    ["UCCA","Montiel","3/2/2026","Annual"],["UCCA","Montiel","6/8/2026","Regular"],["UCCA","Montiel","9/14/2026","Regular"],["UCCA","Montiel","12/2/2026","Budget"],
+    ["UCMA","Eckroth","2/4/2026","Regular"],["UCMA","Eckroth","4/22/2026","Regular"],["UCMA","Eckroth","6/17/2026","Regular"],["UCMA","Eckroth","10/9/2026","Budget"],
+    ["VNGD","Wanninger","3/4/2026","Regular"],["VNGD","Wanninger","5/20/2026","Regular"],["VNGD","Wanninger","9/2/2026","Regular"],["VNGD","Wanninger","12/2/2026","Annual/Budget"],
+    ["VITA","Phillips","3/19/2026","Regular"],["VITA","Phillips","7/30/2026","Regular"],["VITA","Phillips","9/17/2026","Regular"],["VITA","Phillips","11/19/2026","Annual/Budget"],
+    ["WCTL","Coleman","3/3/2026","Regular"],["WCTL","Coleman","6/2/2026","Regular"],["WCTL","Coleman","9/1/2026","Regular"],["WCTL","Coleman","11/3/2026","Annual/Budget"],
+    ["WILL","Wukotich","3/25/2026","Regular"],["WILL","Wukotich","6/24/2026","Regular"],["WILL","Wukotich","9/16/2026","Regular"],["WILL","Wukotich","10/21/2026","Annual/Budget"],
+    ["WINS","Wukotich","2/19/2026","Regular"],["WINS","Wukotich","5/21/2026","Annual"],["WINS","Wukotich","8/20/2026","Regular"],["WINS","Wukotich","11/19/2026","Regular"],
+    ["WOLC","Pekofske","2/19/2026","Regular"],["WOLC","Pekofske","5/7/2026","Annual"],["WOLC","Pekofske","9/10/2026","Budget"],["WOLC","Pekofske","10/29/2026","Budget"],
+    ["YELL","Woods","3/24/2026","Regular"],["YELL","Woods","6/16/2026","Regular"],["YELL","Woods","9/15/2026","Annual"],["YELL","Woods","12/16/2026","Budget"],
+  ];
+  let idC=1;
+  meetings=raw.map(([assoc,ln,ds,type])=>{
+    const mgr=findManager(ln);
+    const d=parseDate(ds);
+    return{id:idC++,manager:mgr?mgr.name:ln,team:mgr?mgr.team:'',assoc,date:d?d.toISOString().split('T')[0]:'',type,format:'',notes:''};
+  }).filter(m=>m.date>='2026-04-10');
+  save();
+})();
+
+// ── AUTO-MARK PRE-CUTOFF AS SUBMITTED ─────────────────────────────────────────
+(()=>{
+  const cutoff='2026-04-20';
+  meetings.filter(m=>m.date&&m.date<cutoff).forEach(m=>{
+    const senior=isSeniorCM(m.manager);
+    [{type:'Agenda',subtype:'For Supervisor Review'},{type:'Board Packet',subtype:'Distributed to Board (Senior CM)'},...(senior?[]:[{type:'Board Packet',subtype:'For Supervisor Review'}])].forEach(t=>{
+      if(!submissions.some(s=>s.manager===m.manager&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type===t.type&&s.subtype===t.subtype)){
+        submissions.push({id:Date.now()+Math.random(),manager:m.manager,team:m.team,assoc:m.assoc,meetingDate:m.date,meetingType:m.type,type:t.type,subtype:t.subtype,includes:[],file:'',notes:'Auto-marked',status:'Approved',submittedAt:new Date(m.date+'T09:00:00').toISOString()});
+      }
+    });
+    if(!getPostMeeting(m.manager,m.assoc,m.date)){
+      postMeetings.push({id:Date.now()+Math.random(),manager:m.manager,team:m.team,assoc:m.assoc,meetingDate:m.date,meetingType:m.type,minutesSaved:'Yes',draftMinutes:'Yes',actionItemsCreated:'Completed',weeklySummarySent:'Completed',proposalsSent:'N/A',signedCopiesSaved:'N/A',vendorEmailsSent:'N/A',docsUploaded:'Done',nextMeetingScheduled:'Both',calendarsUpdated:'All Done',notes:'Auto-marked',submittedAt:new Date(m.date+'T09:00:00').toISOString()});
+    }
+  });
+  save();
+})();
+
+// ── SCORING ───────────────────────────────────────────────────────────────────
+function scoreChecklist(pm){
+  const req=['minutesSaved','draftMinutes','actionItemsCreated','docsUploaded','nextMeetingScheduled','calendarsUpdated'];
+  const pos={minutesSaved:['Yes','No Minutes Approved'],draftMinutes:['Yes','Not Received'],actionItemsCreated:['Completed'],docsUploaded:['Done'],nextMeetingScheduled:['Both','Meeting Invite Sent','Meeting Scheduled'],calendarsUpdated:['All Done']};
+  let done=0; req.forEach(k=>{if(pos[k]?.includes(pm[k]))done++;});
+  return{done,total:req.length,pct:Math.round(done/req.length*100)};
+}
+function checklistBadge(pm){
+  const s=scoreChecklist(pm);
+  if(s.pct===100)return'<span class="post-meeting-badge pmb-complete">✅ Complete</span>';
+  if(s.pct>=50)return`<span class="post-meeting-badge pmb-pending">⚠️ ${s.done}/${s.total}</span>`;
+  return`<span class="post-meeting-badge pmb-missing">❌ ${s.done}/${s.total}</span>`;
+}
+function getPostMeeting(mgr,assoc,date){return postMeetings.find(p=>p.manager===mgr&&p.assoc===assoc&&p.meetingDate===date)||null;}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function fmtDate(d){
+  if(!d)return'—';
+  const dt=typeof d==='string'?new Date(d+'T12:00:00'):d;
+  return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+function fmtDateTime(iso){const d=new Date(iso);return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});}
+function daysDiff(d){
+  if(!d)return 999;
+  const t=new Date(typeof d==='string'?d+'T12:00:00':d);t.setHours(0,0,0,0);
+  const n=new Date();n.setHours(0,0,0,0);
+  return Math.round((t-n)/86400000);
+}
+function urgencyClass(days){return days<0?'overdue':days===0?'today':days<=3?'soon':'ok';}
+function urgencyBadge(days){
+  if(days<0)return`<span class="badge badge-red">Overdue ${Math.abs(days)}d</span>`;
+  if(days===0)return'<span class="badge badge-yellow">Due Today</span>';
+  if(days<=3)return`<span class="badge badge-yellow">Due in ${days}d</span>`;
+  return`<span class="badge badge-green">Due in ${days}d</span>`;
+}
+function isThisWeek(ds){
+  const n=new Date();n.setHours(0,0,0,0);
+  const s=new Date(n);s.setDate(n.getDate()-n.getDay());
+  const e=new Date(s);e.setDate(s.getDate()+6);
+  const d=new Date(ds+'T12:00:00');
+  return d>=s&&d<=e;
+}
+function roleBadge(name){return isSeniorCM(name)?'<span class="badge badge-teal" style="font-size:10px">Senior CM</span>':'<span class="badge badge-gray" style="font-size:10px">CM</span>';}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  ({dashboard:renderDashboard,meetings:renderMeetings,submissions:renderSubmissions,postmeeting:renderPostMeeting,calendar:renderCalendar,analytics:renderAnalytics,managers:renderManagers})[id]?.();
+}
+
+// ── STAT BOX NAV ──────────────────────────────────────────────────────────────
+function scrollToDashSection(id){
+  const dashPage=document.getElementById('page-dashboard');
+  if(!dashPage.classList.contains('active')){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    dashPage.classList.add('active');
+    document.querySelector('nav button:nth-child(1)').classList.add('active');
+  }
+  setTimeout(()=>{const el=document.getElementById(id);if(el)el.closest('.card')?.scrollIntoView({behavior:'smooth',block:'start'});},50);
+}
+function goToMeetingsFiltered(mode){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-meetings').classList.add('active');
+  document.querySelector('nav button:nth-child(2)').classList.add('active');
+  setTimeout(()=>{
+    ['mtg-filter-manager','mtg-filter-team','mtg-filter-assoc','mtg-filter-status','mtg-filter-from','mtg-filter-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    const today=new Date();today.setHours(0,0,0,0);
+    if(mode==='thisweek'){
+      const sun=new Date(today);sun.setDate(today.getDate()-today.getDay());
+      const sat=new Date(sun);sat.setDate(sun.getDate()+6);
+      document.getElementById('mtg-filter-from').value=sun.toISOString().split('T')[0];
+      document.getElementById('mtg-filter-to').value=sat.toISOString().split('T')[0];
+    } else if(mode==='next14'){
+      const end=new Date(today);end.setDate(today.getDate()+14);
+      document.getElementById('mtg-filter-from').value=today.toISOString().split('T')[0];
+      document.getElementById('mtg-filter-to').value=end.toISOString().split('T')[0];
+    }
+    renderMeetings();
+  },50);
+}
+
+// ── SELECTS ───────────────────────────────────────────────────────────────────
+function populateManagerSelects(){
+  ['dash-filter-manager','mtg-filter-manager','sub-filter-manager','pm-filter-manager','cal-filter-manager','an-filter-manager','m-manager','s-manager','pm-manager'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const cur=el.value,isF=id.includes('filter');
+    el.innerHTML=`<option value="">${isF?'All Managers':'Select Manager'}</option>`;
+    MANAGERS.forEach(m=>{const o=document.createElement('option');o.value=m.name;o.textContent=m.name+(m.role==='Senior CM'?' ★':'');el.appendChild(o);});
+    el.value=cur;
+  });
+}
+function updateManagerRole(dispId,selId){
+  const name=document.getElementById(selId)?.value;
+  const el=document.getElementById(dispId);if(!el||!name)return;
+  const m=MANAGERS.find(x=>x.name===name);
+  el.innerHTML=m?.role==='Senior CM'?'<span class="badge badge-teal">Senior CM</span> — Exempt from Supervisor review.':'<span class="badge badge-gray">CM</span> — Standard workflow.';
+}
+function populateAssocFilter(){
+  const el=document.getElementById('mtg-filter-assoc');if(!el)return;
+  const cur=el.value;
+  const assocs=[...new Set(meetings.map(m=>m.assoc))].sort();
+  el.innerHTML='<option value="">All Associations</option>';
+  assocs.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;el.appendChild(o);});
+  el.value=cur;
+}
+function clearMtgFilters(){
+  ['mtg-filter-manager','mtg-filter-team','mtg-filter-assoc','mtg-filter-status','mtg-filter-from','mtg-filter-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderMeetings();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const mgrF=(document.getElementById('dash-filter-manager')||{}).value||'';
+  const teamF=(document.getElementById('dash-filter-team')||{}).value||'';
+  const today=new Date();today.setHours(0,0,0,0);
+  const CUTOFF='2026-04-20';
+  const fm=meetings.filter(m=>(!mgrF||m.manager===mgrF)&&(!teamF||m.team===teamF));
+  const futureMtgs=fm.filter(m=>m.date&&new Date(m.date+'T12:00:00')>=today);
+  const pastMtgs=fm.filter(m=>m.date&&new Date(m.date+'T12:00:00')<today&&m.date>=CUTOFF);
+
+  const upcoming=futureMtgs.filter(m=>daysDiff(m.date)<=14).length;
+  const thisWeek=fm.filter(m=>m.date&&isThisWeek(m.date)).length;
+  let overdue=0;
+  futureMtgs.forEach(m=>{
+    const dl=getDeadlines(m);
+    [dl.agendaDue,dl.boardPacketDue,...(dl.isSenior?[]:[dl.supervisorDue])].forEach(d=>{if(d&&daysDiff(d)<0)overdue++;});
+  });
+  const pmDue=pastMtgs.filter(m=>{
+    if(getPostMeeting(m.manager,m.assoc,m.date))return false;
+    return daysDiff(checklistDueDate(m.date))<=3;
+  }).length;
+
+  const statsEl=document.getElementById('dash-stats');
+  if(statsEl)statsEl.innerHTML=`
+    <div class="card stat-box" onclick="goToMeetingsFiltered('next14')"><div class="num">${upcoming}</div><div class="lbl">Meetings in Next 14 Days</div><div class="hint">↗ View on Meetings page</div></div>
+    <div class="card stat-box" onclick="goToMeetingsFiltered('thisweek')"><div class="num" style="color:var(--info)">${thisWeek}</div><div class="lbl">Meetings This Week</div><div class="hint">↗ View on Meetings page</div></div>
+    <div class="card stat-box" onclick="scrollToDashSection('dash-overdue')"><div class="num" style="color:${overdue>0?'var(--danger)':'var(--accent)'}">${overdue}</div><div class="lbl">Overdue Deadlines</div><div class="hint">↗ View below</div></div>
+    <div class="card stat-box" onclick="scrollToDashSection('dash-awaiting-checklist')"><div class="num" style="color:${pmDue>0?'var(--danger)':'var(--accent)'}">${pmDue}</div><div class="lbl">Post-Meeting Checklists Due</div><div class="hint">↗ View below</div></div>
+  `;
+
+  const weekStart=new Date(today);weekStart.setDate(today.getDate()-((today.getDay()+6)%7));
+  const nextWeekStart=new Date(weekStart);nextWeekStart.setDate(weekStart.getDate()+7);
+  const nextWeekEnd=new Date(weekStart);nextWeekEnd.setDate(weekStart.getDate()+14);
+
+  const dlTWA=[],dlTWP=[],dlNWA=[],dlNWP=[];
+  futureMtgs.forEach(m=>{
+    const dl=getDeadlines(m);
+    const tasks=[
+      {label:'Agenda',date:dl.agendaDue,docType:'Agenda',route:'For Supervisor Review',isA:true},
+      {label:'Pkt→Board',date:dl.boardPacketDue,docType:'Board Packet',route:'Distributed to Board (Senior CM)',isA:false}
+    ];
+    if(!dl.isSenior)tasks.push({label:'Pkt→Supervisor',date:dl.supervisorDue,docType:'Board Packet',route:'For Supervisor Review',isA:false});
+    tasks.forEach(t=>{
+      if(!t.date)return;
+      const d=new Date(t.date);d.setHours(0,0,0,0);
+      const sub=submissions.some(s=>s.manager===m.manager&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type===t.docType&&s.subtype===t.route);
+      const item={...t,days:daysDiff(t.date),meeting:m,sub};
+      if(d>=weekStart&&d<nextWeekStart)(t.isA?dlTWA:dlTWP).push(item);
+      else if(d>=nextWeekStart&&d<nextWeekEnd)(t.isA?dlNWA:dlNWP).push(item);
+    });
+  });
+  [dlTWA,dlTWP,dlNWA,dlNWP].forEach(a=>a.sort((x,y)=>x.days-y.days));
+  const renderDl=(items,empty)=>items.length?items.map(d=>`
+    <div class="deadline-row ${d.sub?'done':urgencyClass(d.days)}" style="padding:7px 10px;margin-bottom:5px">
+      <div class="dl-info">
+        <strong style="font-size:12px">${d.meeting.assoc}${isSeniorCM(d.meeting.manager)?' <span class="senior-tag">SCM</span>':''}</strong>
+        <span style="font-size:11px">${d.meeting.manager} · Due ${fmtDate(d.date)} · Mtg ${fmtDate(d.meeting.date)}</span>
+      </div>
+      ${d.sub?'<span class="badge badge-green">✓</span>':urgencyBadge(d.days)}
+    </div>`).join(''):`<div class="empty" style="padding:16px">${empty}</div>`;
+  const s=(id,h)=>{const e=document.getElementById(id);if(e)e.innerHTML=h;};
+  s('dash-dl-tw-agenda',renderDl(dlTWA,'None this week 🎉'));
+  s('dash-dl-tw-packet',renderDl(dlTWP,'None this week 🎉'));
+  s('dash-dl-nw-agenda',renderDl(dlNWA,'None next week 🎉'));
+  s('dash-dl-nw-packet',renderDl(dlNWP,'None next week 🎉'));
+
+  const wkMtgs=fm.filter(m=>m.date&&isThisWeek(m.date));
+  const wEl=document.getElementById('dash-meetings-week');
+  if(wEl)wEl.innerHTML=wkMtgs.length?wkMtgs.map(m=>{
+    const pm=getPostMeeting(m.manager,m.assoc,m.date);
+    const past=new Date(m.date+'T12:00:00')<today;
+    return`<div class="${past&&pm?'meeting-completed-row':'meeting-week-row'}" style="padding:7px 10px;margin-bottom:5px">
+      <div class="dl-info"><strong style="font-size:12px">${m.assoc} — ${m.type}${isSeniorCM(m.manager)?' <span class="senior-tag">SCM</span>':''}</strong>
+      <span style="font-size:11px">${m.manager} · ${fmtDate(m.date)}</span></div>
+      ${past?(pm?'<span class="badge badge-green">✅ Done</span>':'<span class="badge badge-orange">⏳ Pending</span>'):(`<span class="badge badge-blue">${daysDiff(m.date)===0?'Today':'In '+daysDiff(m.date)+'d'}</span>`)}
+    </div>`;}).join(''):'<div class="empty" style="padding:16px">No meetings this week</div>';
+
+  const overdueItems=[];
+  futureMtgs.forEach(m=>{
+    const dl=getDeadlines(m);
+    [{label:'Agenda overdue',date:dl.agendaDue,docType:'Agenda',route:'For Supervisor Review'},{label:'Pkt→Board overdue',date:dl.boardPacketDue,docType:'Board Packet',route:'Distributed to Board (Senior CM)'},...(dl.isSenior?[]:[{label:'Pkt→Supervisor overdue',date:dl.supervisorDue,docType:'Board Packet',route:'For Supervisor Review'}])].forEach(t=>{
+      if(!t.date||daysDiff(t.date)>=0)return;
+      if(!submissions.some(s=>s.manager===m.manager&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type===t.docType&&s.subtype===t.route))
+        overdueItems.push({label:t.label,assoc:m.assoc,manager:m.manager,meetingDate:m.date,days:daysDiff(t.date)});
+    });
+  });
+  pastMtgs.forEach(m=>{
+    if(getPostMeeting(m.manager,m.assoc,m.date))return;
+    const days=daysDiff(checklistDueDate(m.date));
+    if(days<0)overdueItems.push({label:'Checklist overdue',assoc:m.assoc,manager:m.manager,meetingDate:m.date,days});
+  });
+  overdueItems.sort((a,b)=>a.days-b.days);
+  const ovEl=document.getElementById('dash-overdue');
+  if(ovEl)ovEl.innerHTML=overdueItems.length?overdueItems.map(item=>`
+    <div class="deadline-row overdue" style="padding:7px 10px;margin-bottom:5px">
+      <div class="dl-info"><strong style="font-size:12px">${item.assoc} — ${item.label}</strong>
+      <span style="font-size:11px">${item.manager} · Mtg ${fmtDate(item.meetingDate)}</span></div>
+      <span class="badge badge-red">Overdue ${Math.abs(item.days)}d</span>
+    </div>`).join(''):'<div class="empty" style="padding:16px">No overdue items 🎉</div>';
+
+  const awaitList=pastMtgs.filter(m=>!getPostMeeting(m.manager,m.assoc,m.date)).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,8);
+  const awEl=document.getElementById('dash-awaiting-checklist');
+  if(awEl)awEl.innerHTML=awaitList.length?awaitList.map(m=>{
+    const due=checklistDueDate(m.date);
+    const dU=daysDiff(due);const isOv=dU<0;
+    const rowClass=isOv?'overdue':dU===0?'today':'soon';
+    const badge=isOv?`<span class="badge badge-red">Overdue ${Math.abs(dU)}d</span>`:dU===0?'<span class="badge badge-yellow">Due Today</span>':`<span class="badge badge-yellow">Due in ${dU}d</span>`;
+    return`<div class="deadline-row ${rowClass}" style="padding:7px 10px;margin-bottom:5px">
+      <div class="dl-info"><strong style="font-size:12px">${m.assoc} — ${m.type}</strong>
+      <span style="font-size:11px">${m.manager} · Mtg ${fmtDate(m.date)} · Due ${fmtDate(due)}</span></div>${badge}
+    </div>`;}).join(''):'<div class="empty" style="padding:16px">All past meetings have checklists ✅</div>';
+}
+
+// ── SORT STATE ────────────────────────────────────────────────────────────────
+let mtgSortCol='date',mtgSortDir=1;
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+
+function sortMeetings(col){
+  mtgSortCol===col?mtgSortDir*=-1:(mtgSortCol=col,mtgSortDir=1);
+  document.querySelectorAll('#meetings-table th').forEach(th=>th.classList.remove('sort-asc','sort-desc'));
+  const cols=['assoc','manager','role','team','date','type','format','agendaDue','supervisorDue','boardDue','status','checklist'];
+  const idx=cols.indexOf(col);
+  const ths=document.querySelectorAll('#meetings-table th');
+  if(idx>=0&&ths[idx])ths[idx].classList.add(mtgSortDir===1?'sort-asc':'sort-desc');
+  renderMeetings();
+}
+function getMeetingSortValue(m,col,today){
+  const dl=getDeadlines(m);
+  const pm=getPostMeeting(m.manager,m.assoc,m.date);
+  const future=m.date&&new Date(m.date+'T12:00:00')>=today;
+  switch(col){
+    case 'assoc':return m.assoc||'';case 'manager':return m.manager||'';case 'role':return isSeniorCM(m.manager)?'Senior CM':'CM';
+    case 'team':return m.team||'';case 'date':return m.date||'';case 'type':return m.type||'';case 'format':return m.format||'';
+    case 'agendaDue':return dl.agendaDue?dl.agendaDue.toISOString():'';
+    case 'supervisorDue':return dl.supervisorDue?dl.supervisorDue.toISOString():'zzz';
+    case 'boardDue':return dl.boardPacketDue?dl.boardPacketDue.toISOString():'';
+    case 'status':return future?'upcoming':isThisWeek(m.date)?'thisweek':'past';
+    case 'checklist':return pm?'done':future?'na':'pending';
+    default:return m.date||'';
+  }
+}
+
+// ── MEETINGS PAGE ─────────────────────────────────────────────────────────────
+function renderMeetings(){
+  const mgrF=(document.getElementById('mtg-filter-manager')||{}).value||'';
+  const teamF=(document.getElementById('mtg-filter-team')||{}).value||'';
+  const assocF=(document.getElementById('mtg-filter-assoc')||{}).value||'';
+  const stF=(document.getElementById('mtg-filter-status')||{}).value||'';
+  const fromF=(document.getElementById('mtg-filter-from')||{}).value||'';
+  const toF=(document.getElementById('mtg-filter-to')||{}).value||'';
+  const today=new Date();today.setHours(0,0,0,0);
+  let filtered=meetings.filter(m=>{
+    if(mgrF&&m.manager!==mgrF)return false;
+    if(teamF&&m.team!==teamF)return false;
+    if(assocF&&m.assoc!==assocF)return false;
+    if(!m.date)return false;
+    if(stF==='upcoming'&&new Date(m.date+'T12:00:00')<today)return false;
+    if(stF==='past'&&new Date(m.date+'T12:00:00')>=today)return false;
+    if(fromF&&m.date<fromF)return false;
+    if(toF&&m.date>toF)return false;
+    return true;
+  }).sort((a,b)=>{
+    const av=getMeetingSortValue(a,mtgSortCol,today);
+    const bv=getMeetingSortValue(b,mtgSortCol,today);
+    return av<bv?-mtgSortDir:av>bv?mtgSortDir:0;
+  });
+  const tbody=document.getElementById('meetings-tbody');
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="13" class="empty">No meetings found</td></tr>';return;}
+  tbody.innerHTML=filtered.map(m=>{
+    const dl=getDeadlines(m);
+    const future=new Date(m.date+'T12:00:00')>=today;
+    const agDays=dl.agendaDue?daysDiff(dl.agendaDue):999;
+    const spDays=dl.supervisorDue?daysDiff(dl.supervisorDue):999;
+    const bpDays=dl.boardPacketDue?daysDiff(dl.boardPacketDue):999;
+    const aSub=submissions.some(s=>s.manager===m.manager&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type==='Agenda');
+    const sSub=submissions.some(s=>s.manager===m.manager&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type==='Board Packet'&&s.subtype==='For Supervisor Review');
+    const bSub=submissions.some(s=>s.manager===m.manager&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type==='Board Packet'&&s.subtype==='Distributed to Board (Senior CM)');
+    const pm=getPostMeeting(m.manager,m.assoc,m.date);
+    const tc=m.team==='Blue Team'?'team-blue':'team-green';
+    const supCell=dl.isSenior?'<span class="badge badge-teal">Exempt</span>':(sSub?'<span class="badge badge-green">✓</span>':future?urgencyBadge(spDays):'<span class="badge badge-gray">Past</span>');
+    const statusCell=future?'<span class="badge badge-blue">Upcoming</span>':isThisWeek(m.date)?'<span class="badge badge-orange">This Week</span>':`<span class="badge badge-gray">Done ${Math.abs(daysDiff(m.date))}d ago</span>`;
+    const pmCell=future?'<span class="badge badge-gray">N/A</span>':pm?`<button class="btn btn-outline btn-sm" onclick="showChecklistDetail(${pm.id})">${checklistBadge(pm)}</button>`:`<div>${checklistDueBadge(m.date,false)}</div><button class="btn btn-warning btn-sm" style="margin-top:3px" onclick="prefillPostMeeting('${m.manager}','${m.assoc}','${m.date}','${m.type}')">+ Add</button>`;
+    return`<tr>
+      <td><strong>${m.assoc}</strong></td><td style="white-space:nowrap">${m.manager}</td>
+      <td>${roleBadge(m.manager)}</td><td><span class="${tc}">${m.team}</span></td>
+      <td style="white-space:nowrap">${fmtDate(m.date)}</td><td>${m.type}</td><td style="font-size:11px">${m.format||''}</td>
+      <td>${aSub?'<span class="badge badge-green">✓</span>':future?urgencyBadge(agDays):'<span class="badge badge-gray">Past</span>'}<div style="font-size:10px;color:var(--muted)">${fmtDate(dl.agendaDue)}</div></td>
+      <td>${supCell}${!dl.isSenior&&dl.supervisorDue?`<div style="font-size:10px;color:var(--muted)">${fmtDate(dl.supervisorDue)}</div>`:''}</td>
+      <td>${bSub?'<span class="badge badge-green">✓</span>':future?urgencyBadge(bpDays):'<span class="badge badge-gray">Past</span>'}<div style="font-size:10px;color:var(--muted)">${fmtDate(dl.boardPacketDue)}</div></td>
+      <td>${statusCell}</td><td>${pmCell}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-outline btn-sm" onclick="editMeeting(${m.id})">Edit</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:3px" onclick="deleteMeeting(${m.id})">Del</button>
+      </td></tr>`;
+  }).join('');
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────────────────────
+function calGoToday(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCalendar();}
+function calPrevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
+function calNextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
+function pillClass(type){
+  const t=(type||'').toLowerCase();
+  if(t.includes('annual')&&t.includes('budget'))return'cal-pill-annual-budget';
+  if(t.includes('annual'))return'cal-pill-annual';
+  if(t.includes('budget'))return'cal-pill-budget';
+  if(t.includes('above'))return'cal-pill-above';
+  if(t.includes('special')||t.includes('rule'))return'cal-pill-special';
+  return'cal-pill-regular';
+}
+function renderCalendar(){
+  const mgrF=(document.getElementById('cal-filter-manager')||{}).value||'';
+  const teamF=(document.getElementById('cal-filter-team')||{}).value||'';
+  const typeF=(document.getElementById('cal-filter-type')||{}).value||'';
+  const byDate={};
+  meetings.forEach(m=>{
+    if(!m.date||mgrF&&m.manager!==mgrF||teamF&&m.team!==teamF||typeF&&m.type!==typeF)return;
+    if(!byDate[m.date])byDate[m.date]=[];byDate[m.date].push(m);
+  });
+  const dlByDate={};
+  meetings.forEach(m=>{
+    if(!m.date||mgrF&&m.manager!==mgrF||teamF&&m.team!==teamF)return;
+    const dl=getDeadlines(m);
+    [[dl.agendaDue,'agenda'],[dl.boardPacketDue,'packet'],[dl.supervisorDue,'packet']].forEach(([d,kind])=>{
+      if(!d)return;
+      const ds=d.toISOString().split('T')[0];
+      if(!dlByDate[ds])dlByDate[ds]=[];dlByDate[ds].push({kind,meeting:m});
+    });
+  });
+  const today=new Date();today.setHours(0,0,0,0);
+  const mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-label').textContent=`${mn[calMonth]} ${calYear}`;
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const dim=new Date(calYear,calMonth+1,0).getDate();
+  const dip=new Date(calYear,calMonth,0).getDate();
+  const grid=document.getElementById('cal-grid');
+  let html=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="cal-day-header">${d}</div>`).join('');
+  for(let i=0;i<firstDay;i++){html+=`<div class="cal-day other-month"><div class="cal-day-num"><span>${dip-firstDay+i+1}</span></div></div>`;}
+  for(let d=1;d<=dim;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dt=new Date(calYear,calMonth,d);dt.setHours(0,0,0,0);
+    const isT=dt.getTime()===today.getTime();
+    const mtgs=byDate[ds]||[];const dls=dlByDate[ds]||[];
+    const shown=mtgs.slice(0,3);const extra=mtgs.length-3;
+    const numEl=isT?`<span class="today-num">${d}</span>`:`<span>${d}</span>`;
+    const hasA=dls.some(x=>x.kind==='agenda');const hasP=dls.some(x=>x.kind==='packet');
+    const dots=(hasA||hasP)?`<span>${hasA?'<span class="cal-deadline-dot dot-agenda"></span>':''}${hasP?'<span class="cal-deadline-dot dot-packet"></span>':''}</span>`:'';
+    html+=`<div class="cal-day${isT?' today':''}" onclick="showCalDay('${ds}')">
+      <div class="cal-day-num">${numEl}${dots}</div>
+      ${shown.map(m=>`<span class="cal-pill ${pillClass(m.type)}" onclick="event.stopPropagation();showCalDay('${ds}')">${m.assoc} ${m.type}</span>`).join('')}
+      ${extra>0?`<span class="cal-more" onclick="event.stopPropagation();showCalDay('${ds}')">+${extra} more</span>`:''}
+    </div>`;
+  }
+  const trailing=(firstDay+dim)%7===0?0:7-((firstDay+dim)%7);
+  for(let d=1;d<=trailing;d++){html+=`<div class="cal-day other-month"><div class="cal-day-num"><span>${d}</span></div></div>`;}
+  grid.innerHTML=html;
+  document.getElementById('cal-detail').style.display='none';
+}
+function showCalDay(ds){
+  const mgrF=(document.getElementById('cal-filter-manager')||{}).value||'';
+  const teamF=(document.getElementById('cal-filter-team')||{}).value||'';
+  const dayMtgs=meetings.filter(m=>m.date===ds&&(!mgrF||m.manager===mgrF)&&(!teamF||m.team===teamF));
+  const dayDls=[];
+  meetings.forEach(m=>{
+    if(!m.date||mgrF&&m.manager!==mgrF||teamF&&m.team!==teamF)return;
+    const dl=getDeadlines(m);
+    [{label:'Agenda Due',date:dl.agendaDue,docType:'Agenda',route:'For Supervisor Review'},{label:'Pkt→Board',date:dl.boardPacketDue,docType:'Board Packet',route:'Distributed to Board (Senior CM)'},...(dl.isSenior?[]:[{label:'Pkt→Supervisor',date:dl.supervisorDue,docType:'Board Packet',route:'For Supervisor Review'}])].forEach(t=>{
+      if(!t.date)return;
+      const tds=t.date.toISOString().split('T')[0];
+      if(tds===ds){
+        const sub=submissions.some(s=>s.manager===m.manager&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type===t.docType&&s.subtype===t.route);
+        dayDls.push({...t,meeting:m,sub});
+      }
+    });
+  });
+  const dt=new Date(ds+'T12:00:00');
+  document.getElementById('cal-detail-title').textContent=dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  let body='';
+  if(dayMtgs.length){
+    body+=`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px">📅 Meetings (${dayMtgs.length})</div>`;
+    body+=dayMtgs.map(m=>{
+      const tc=m.team==='Blue Team'?'team-blue':'team-green';
+      const pm=getPostMeeting(m.manager,m.assoc,m.date);
+      return`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#f8fafc;border-radius:6px;margin-bottom:6px;flex-wrap:wrap">
+        <span class="cal-pill ${pillClass(m.type)}">${m.type}</span>
+        <strong style="font-size:13px">${m.assoc}</strong>
+        <span style="font-size:12px;color:var(--muted)">${m.manager}</span>
+        <span class="${tc}" style="font-size:11px">${m.team}</span>
+        ${pm?'<span class="badge badge-green" style="font-size:10px">✅ Checklist Done</span>':'<span class="badge badge-orange" style="font-size:10px">⏳ No Checklist</span>'}
+      </div>`;}).join('');
+    body+='</div>';
+  }
+  if(dayDls.length){
+    body+=`<div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px">📬 Deadlines (${dayDls.length})</div>`;
+    body+=dayDls.map(d=>`<div class="deadline-row ${d.sub?'done':urgencyClass(daysDiff(ds))}">
+      <div class="dl-info"><strong>${d.meeting.assoc} — ${d.label}</strong><span>${d.meeting.manager} · Meeting: ${fmtDate(d.meeting.date)}</span></div>
+      ${d.sub?'<span class="badge badge-green">✓</span>':'<span class="badge badge-blue">Pending</span>'}
+    </div>`).join('');
+    body+='</div>';
+  }
+  if(!dayMtgs.length&&!dayDls.length)body='<div class="empty">No meetings or deadlines on this day.</div>';
+  document.getElementById('cal-detail-body').innerHTML=body;
+  document.getElementById('cal-detail').style.display='block';
+  document.getElementById('cal-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ── POST-MEETING PAGE ─────────────────────────────────────────────────────────
+function renderPostMeeting(){
+  const mgrF=(document.getElementById('pm-filter-manager')||{}).value||'';
+  const teamF=(document.getElementById('pm-filter-team')||{}).value||'';
+  const cpF=(document.getElementById('pm-filter-complete')||{}).value||'';
+  let filtered=postMeetings.filter(p=>{
+    if(mgrF&&p.manager!==mgrF)return false;
+    if(teamF&&p.team!==teamF)return false;
+    const s=scoreChecklist(p);
+    if(cpF==='complete'&&s.pct<100)return false;
+    if(cpF==='partial'&&s.pct===100)return false;
+    return true;
+  }).sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+  const tbody=document.getElementById('postmeeting-tbody');
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="16" class="empty">No post-meeting checklists found</td></tr>';return;}
+  const ci=(v,pos)=>`<span style="font-size:11px" class="${pos.includes(v)?'ci-yes':v==='N/A'||v==='Not Received'?'ci-na':'ci-no'}">${v||'—'}</span>`;
+  tbody.innerHTML=filtered.map(p=>`<tr>
+    <td style="font-size:11px;white-space:nowrap">${fmtDateTime(p.submittedAt)}</td>
+    <td style="white-space:nowrap">${p.manager}</td>
+    <td><span class="${p.team==='Blue Team'?'team-blue':'team-green'}">${p.team}</span></td>
+    <td><strong>${p.assoc}</strong></td><td style="white-space:nowrap">${fmtDate(p.meetingDate)}</td><td>${p.meetingType}</td>
+    <td>${ci(p.minutesSaved,['Yes','No Minutes Approved'])}</td><td>${ci(p.draftMinutes,['Yes','Not Received'])}</td>
+    <td>${ci(p.actionItemsCreated,['Completed'])}</td><td>${ci(p.weeklySummarySent,['Completed','N/A'])}</td>
+    <td>${ci(p.proposalsSent,['Done','N/A'])}</td><td>${ci(p.docsUploaded,['Done'])}</td>
+    <td>${ci(p.nextMeetingScheduled,['Both','Meeting Invite Sent','Meeting Scheduled'])}</td><td>${ci(p.calendarsUpdated,['All Done'])}</td>
+    <td><button class="btn btn-outline btn-sm" onclick="showChecklistDetail(${p.id})">${checklistBadge(p)}</button></td>
+    <td><button class="btn btn-danger btn-sm" onclick="deletePostMeeting(${p.id})">Del</button></td>
+  </tr>`).join('');
+}
+function showChecklistDetail(id){
+  const p=postMeetings.find(x=>x.id===id);if(!p)return;
+  const s=scoreChecklist(p);
+  document.getElementById('cd-title').textContent=`${p.assoc} — Post-Meeting Checklist · ${fmtDate(p.meetingDate)}`;
+  const rows=[['Minutes saved in COTA & CincWebAxis',p.minutesSaved,['Yes','No Minutes Approved']],['Draft Minutes saved',p.draftMinutes,['Yes','Not Received']],['Board Action Items in CINC',p.actionItemsCreated,['Completed']],['Weekly Status Summary sent',p.weeklySummarySent,['Completed','N/A']],['Proposals sent for signature',p.proposalsSent,['Done','N/A']],['Signed copies saved',p.signedCopiesSaved,['COTA Done','CincWebAxis Done','Both Done','N/A']],['Email copies to vendors',p.vendorEmailsSent,['Done','N/A']],['Docs uploaded to CincWebAxis',p.docsUploaded,['Done']],['Next meeting invitation sent',p.nextMeetingScheduled,['Both','Meeting Invite Sent','Meeting Scheduled']],['Calendars updated',p.calendarsUpdated,['All Done']]];
+  document.getElementById('cd-body').innerHTML=`
+    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;font-size:13px">
+      <span><strong>Manager:</strong> ${p.manager}</span><span><strong>Team:</strong> ${p.team}</span>
+      <span><strong>Meeting:</strong> ${fmtDate(p.meetingDate)} — ${p.meetingType}</span>
+      <span><strong>Submitted:</strong> ${fmtDateTime(p.submittedAt)}</span>
+    </div>
+    <div style="margin-bottom:12px">${checklistBadge(p)} <span style="font-size:12px;color:var(--muted);margin-left:8px">${s.done} of ${s.total} complete</span></div>
+    ${rows.map(([label,val,pos])=>`<div class="checklist-item">
+      <span style="font-size:14px">${pos.includes(val)?'✅':val==='N/A'||val==='Not Received'?'➖':'❌'}</span>
+      <span class="ci-label">${label}</span>
+      <span class="ci-val ${pos.includes(val)?'ci-yes':val==='N/A'||val==='Not Received'?'ci-na':'ci-no'}">${val||'—'}</span>
+    </div>`).join('')}
+    ${p.notes?`<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:6px;font-size:12px"><strong>Notes:</strong> ${p.notes}</div>`:''}`;
+  document.getElementById('checklist-detail-modal').classList.add('open');
+}
+
+// ── SUBMISSIONS PAGE ──────────────────────────────────────────────────────────
+function renderSubmissions(){
+  const mgrF=(document.getElementById('sub-filter-manager')||{}).value||'';
+  const typeF=(document.getElementById('sub-filter-type')||{}).value||'';
+  const subtF=(document.getElementById('sub-filter-subtype')||{}).value||'';
+  const stF=(document.getElementById('sub-filter-status')||{}).value||'';
+  let filtered=submissions.filter(s=>{
+    if(mgrF&&s.manager!==mgrF)return false;if(typeF&&s.type!==typeF)return false;
+    if(subtF&&s.subtype!==subtF)return false;if(stF&&s.status!==stF)return false;return true;
+  }).sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+  const tbody=document.getElementById('submissions-tbody');
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="12" class="empty">No submissions found</td></tr>';return;}
+  tbody.innerHTML=filtered.map(s=>{
+    const tc=s.team==='Blue Team'?'team-blue':'team-green';
+    const sb=s.status==='Approved'?'badge-green':s.status==='Submitted'?'badge-blue':'badge-gray';
+    const inc=(s.includes||[]).map(i=>`<span class="chip chip-blue">${i}</span>`).join('');
+    return`<tr>
+      <td style="font-size:11px;white-space:nowrap">${fmtDateTime(s.submittedAt)}</td>
+      <td style="white-space:nowrap">${s.manager}</td><td>${roleBadge(s.manager)}</td>
+      <td><span class="${tc}">${s.team}</span></td><td><strong>${s.assoc}</strong></td>
+      <td style="white-space:nowrap">${fmtDate(s.meetingDate)}</td>
+      <td><span class="badge ${s.type==='Agenda'?'badge-purple':'badge-blue'}">${s.type}</span></td>
+      <td style="font-size:11px">${s.subtype}</td><td style="font-size:11px">${inc||'—'}</td>
+      <td>${s.file?`<a class="file-link" href="#">📎 ${s.file}</a>`:'—'}</td>
+      <td><span class="badge ${sb}">${s.status}</span></td>
+      <td style="white-space:nowrap">
+        ${s.status!=='Approved'?`<button class="btn btn-success btn-sm" onclick="approveSubmission(${s.id})">Approve</button>`:''}
+        <button class="btn btn-danger btn-sm" style="margin-left:3px" onclick="deleteSubmission(${s.id})">Del</button>
+      </td></tr>`;
+  }).join('');
+}
+
+// ── MANAGERS PAGE ─────────────────────────────────────────────────────────────
+function renderManagers(){
+  const teamF=(document.getElementById('mgr-filter-team')||{}).value||'';
+  const roleF=(document.getElementById('mgr-filter-role')||{}).value||'';
+  const today=new Date();today.setHours(0,0,0,0);
+  const mgrs=MANAGERS.filter(m=>(!teamF||m.team===teamF)&&(!roleF||m.role===roleF));
+  document.getElementById('managers-grid').innerHTML=mgrs.map(mgr=>{
+    const myMtgs=meetings.filter(m=>m.manager===mgr.name);
+    const upcoming=myMtgs.filter(m=>m.date&&new Date(m.date+'T12:00:00')>=today);
+    const past=myMtgs.filter(m=>m.date&&new Date(m.date+'T12:00:00')<today);
+    const clDone=past.filter(m=>getPostMeeting(m.manager,m.assoc,m.date)).length;
+    const assocs=[...new Set(myMtgs.map(m=>m.assoc))];
+    let total=0,done=0;
+    upcoming.forEach(m=>{
+      const dl=getDeadlines(m);
+      [{type:'Agenda',route:'For Supervisor Review',date:dl.agendaDue},{type:'Board Packet',route:'Distributed to Board (Senior CM)',date:dl.boardPacketDue},...(dl.isSenior?[]:[{type:'Board Packet',route:'For Supervisor Review',date:dl.supervisorDue}])].forEach(t=>{
+        if(t.date&&daysDiff(t.date)<=14){total++;if(submissions.some(s=>s.manager===mgr.name&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type===t.type&&s.subtype===t.route))done++;}
+      });
+    });
+    const pct=total?Math.round(done/total*100):100;
+    const pctColor=pct>=80?'var(--accent)':pct>=50?'#e65100':'var(--danger)';
+    const tc=mgr.team==='Blue Team'?'team-blue':'team-green';
+    return`<div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div><strong style="font-size:14px">${mgr.name}</strong>${mgr.role==='Senior CM'?'<span class="senior-tag" style="margin-left:6px">Senior CM</span>':''}
+        <div class="${tc}" style="font-size:12px;margin-top:2px">${mgr.team}</div></div>
+        <span class="badge ${pct>=80?'badge-green':pct>=50?'badge-yellow':'badge-red'}">${pct}% pre-mtg</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pctColor}"></div></div>
+      <div style="display:flex;gap:12px;margin-top:10px;font-size:12px;color:var(--muted);flex-wrap:wrap">
+        <span>📅 ${upcoming.length} upcoming</span><span>✅ ${clDone}/${past.length} checklists</span><span>🏘️ ${assocs.length} assoc${assocs.length!==1?'s':''}</span>
+      </div>
+      ${assocs.length?`<div style="margin-top:8px">${assocs.map(a=>`<span class="chip chip-blue">${a}</span>`).join('')}</div>`:'<div style="font-size:12px;color:var(--muted);margin-top:8px">No meetings yet</div>'}
+      <div style="margin-top:10px"><button class="btn btn-outline btn-sm" onclick="editManagerModal('${mgr.name}')">Edit Role</button></div>
+    </div>`;
+  }).join('');
+}
+
+// ── MEETING MODAL ─────────────────────────────────────────────────────────────
+function openMeetingModal(id=null){
+  editingMeetingId=id;
+  const m=id?meetings.find(x=>x.id===id):null;
+  document.getElementById('meeting-modal-title').textContent=id?'Edit Meeting':'Add Meeting';
+  document.getElementById('m-manager').value=m?.manager||'';
+  document.getElementById('m-assoc').value=m?.assoc||'';
+  document.getElementById('m-date').value=m?.date||'';
+  document.getElementById('m-type').value=m?.type||'Regular';
+  document.getElementById('m-format').value=m?.format||'Virtual';
+  document.getElementById('m-notes').value=m?.notes||'';
+  updateManagerRole('m-role-display','m-manager');
+  updateDeadlinePreview();
+  document.getElementById('meeting-modal').classList.add('open');
+}
+function updateDeadlinePreview(){
+  const d=document.getElementById('m-date').value;
+  const mn=document.getElementById('m-manager').value;
+  const el=document.getElementById('m-deadlines-preview');
+  if(!d){el.innerHTML='Enter a meeting date to see auto-calculated deadlines.';return;}
+  const dl=calcDeadlines(d,mn);
+  const clDue=checklistDueDate(d);
+  el.innerHTML=`<strong>📌 Auto-calculated deadlines:</strong><br>
+    📋 <strong>Agenda (Wed):</strong> ${fmtDate(dl.agendaDue)}<br>
+    ${dl.isSenior?'<span style="color:#00695c">📦 <strong>Supervisor:</strong> Exempt (Senior CM)</span>':'📦 <strong>Packet → Supervisor (Wed):</strong> '+fmtDate(dl.supervisorDue)}<br>
+    📬 <strong>Packet → Board (Fri):</strong> ${fmtDate(dl.boardPacketDue)}<br>
+    ✅ <strong>Checklist Due:</strong> ${fmtDate(clDue)} (3 business days after meeting)`;
+}
+function saveMeeting(){
+  const mgr=document.getElementById('m-manager').value,assoc=document.getElementById('m-assoc').value.trim().toUpperCase(),date=document.getElementById('m-date').value;
+  if(!mgr||!assoc||!date){alert('Please fill in all required fields');return;}
+  const mgrObj=MANAGERS.find(m=>m.name===mgr);
+  const data={manager:mgr,team:mgrObj?.team||'',assoc,date,type:document.getElementById('m-type').value,format:document.getElementById('m-format').value,notes:document.getElementById('m-notes').value};
+  if(editingMeetingId){const idx=meetings.findIndex(m=>m.id===editingMeetingId);meetings[idx]={...meetings[idx],...data};}
+  else{data.id=Date.now();meetings.push(data);}
+  save();closeModal('meeting-modal');renderMeetings();renderDashboard();populateAssocFilter();
+}
+function editMeeting(id){openMeetingModal(id);}
+function deleteMeeting(id){if(confirm('Delete this meeting?')){meetings=meetings.filter(m=>m.id!==id);save();renderMeetings();renderDashboard();}}
+
+// ── SUBMISSION MODAL ──────────────────────────────────────────────────────────
+function openSubModal(){
+  document.getElementById('sub-modal').classList.add('open');
+  document.querySelectorAll('#s-includes-checks input').forEach(c=>c.checked=false);
+  ['s-manager','s-assoc','s-date','s-file','s-notes'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('s-role-display').innerHTML='';
+}
+function saveSubmission(){
+  const mgr=document.getElementById('s-manager').value,assoc=document.getElementById('s-assoc').value.trim().toUpperCase(),date=document.getElementById('s-date').value;
+  if(!mgr||!assoc||!date){alert('Please fill required fields');return;}
+  const mgrObj=MANAGERS.find(m=>m.name===mgr);
+  const includes=[...document.querySelectorAll('#s-includes-checks input:checked')].map(c=>c.value);
+  const data={id:Date.now(),manager:mgr,team:mgrObj?.team||'',assoc,meetingDate:date,meetingType:document.getElementById('s-meetingtype').value,type:document.getElementById('s-type').value,subtype:document.getElementById('s-subtype').value,includes,file:document.getElementById('s-file').value.trim(),notes:document.getElementById('s-notes').value,status:'Submitted',submittedAt:new Date().toISOString()};
+  submissions.push(data);
+  if(!meetings.some(m=>m.manager===mgr&&m.assoc===assoc&&m.date===date))
+    meetings.push({id:Date.now()+1,manager:mgr,team:mgrObj?.team||'',assoc,date,type:data.meetingType,format:'',notes:''});
+  save();closeModal('sub-modal');renderSubmissions();renderDashboard();
+}
+function approveSubmission(id){const s=submissions.find(x=>x.id===id);if(s){s.status='Approved';save();renderSubmissions();}}
+function deleteSubmission(id){if(confirm('Delete?')){submissions=submissions.filter(s=>s.id!==id);save();renderSubmissions();renderDashboard();}}
+
+// ── POST-MEETING MODAL ────────────────────────────────────────────────────────
+function openPostMeetingModal(){['pm-manager','pm-assoc','pm-date','pm-notes'].forEach(i=>document.getElementById(i).value='');document.getElementById('postmeeting-modal').classList.add('open');}
+function prefillPostMeeting(mgr,assoc,date,type){
+  document.getElementById('pm-manager').value=mgr;document.getElementById('pm-assoc').value=assoc;
+  document.getElementById('pm-date').value=date;document.getElementById('pm-meetingtype').value=type||'Regular';
+  document.getElementById('pm-notes').value='';document.getElementById('postmeeting-modal').classList.add('open');
+}
+function savePostMeeting(){
+  const mgr=document.getElementById('pm-manager').value,assoc=document.getElementById('pm-assoc').value.trim().toUpperCase(),date=document.getElementById('pm-date').value;
+  if(!mgr||!assoc||!date){alert('Please fill required fields');return;}
+  const mgrObj=MANAGERS.find(m=>m.name===mgr);
+  const data={id:Date.now(),manager:mgr,team:mgrObj?.team||'',assoc,meetingDate:date,meetingType:document.getElementById('pm-meetingtype').value,minutesSaved:document.getElementById('pm-minutes-saved').value,draftMinutes:document.getElementById('pm-draft-minutes').value,actionItemsCreated:document.getElementById('pm-action-items').value,weeklySummarySent:document.getElementById('pm-weekly-summary').value,proposalsSent:document.getElementById('pm-proposals-sent').value,signedCopiesSaved:document.getElementById('pm-signed-saved').value,vendorEmailsSent:document.getElementById('pm-vendor-emails').value,docsUploaded:document.getElementById('pm-docs-uploaded').value,nextMeetingScheduled:document.getElementById('pm-next-meeting').value,calendarsUpdated:document.getElementById('pm-calendars').value,notes:document.getElementById('pm-notes').value,submittedAt:new Date().toISOString()};
+  const ei=postMeetings.findIndex(p=>p.manager===mgr&&p.assoc===assoc&&p.meetingDate===date);
+  if(ei>=0)postMeetings[ei]={...postMeetings[ei],...data};else postMeetings.push(data);
+  if(!meetings.some(m=>m.manager===mgr&&m.assoc===assoc&&m.date===date))
+    meetings.push({id:Date.now()+1,manager:mgr,team:mgrObj?.team||'',assoc,date,type:data.meetingType,format:'',notes:''});
+  save();closeModal('postmeeting-modal');renderPostMeeting();renderDashboard();renderMeetings();
+}
+function deletePostMeeting(id){if(confirm('Delete?')){postMeetings=postMeetings.filter(p=>p.id!==id);save();renderPostMeeting();renderDashboard();renderMeetings();}}
+
+// ── MANAGER MODAL ─────────────────────────────────────────────────────────────
+function openManagerModal(){
+  editingManagerName=null;document.getElementById('mgr-modal-title').textContent='Add Manager';
+  ['mgr-name','mgr-email'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('mgr-team').value='Blue Team';document.getElementById('mgr-role').value='CM';
+  document.getElementById('manager-modal').classList.add('open');
+}
+function editManagerModal(name){
+  editingManagerName=name;const m=MANAGERS.find(x=>x.name===name);
+  document.getElementById('mgr-modal-title').textContent='Edit Manager Role';
+  document.getElementById('mgr-name').value=m.name;document.getElementById('mgr-email').value=m.email||'';
+  document.getElementById('mgr-team').value=m.team;document.getElementById('mgr-role').value=m.role||'CM';
+  document.getElementById('manager-modal').classList.add('open');
+}
+function saveManagerEdit(){
+  const name=document.getElementById('mgr-name').value.trim(),email=document.getElementById('mgr-email').value.trim(),team=document.getElementById('mgr-team').value,role=document.getElementById('mgr-role').value;
+  if(!name){alert('Name required');return;}
+  if(editingManagerName){
+    const m=MANAGERS.find(x=>x.name===editingManagerName);
+    if(m){m.name=name;m.email=email;m.team=team;m.role=role;}
+    if(editingManagerName!==name){meetings.forEach(m=>{if(m.manager===editingManagerName)m.manager=name;});submissions.forEach(s=>{if(s.manager===editingManagerName)s.manager=name;});postMeetings.forEach(p=>{if(p.manager===editingManagerName)p.manager=name;});}
+  } else {
+    if(MANAGERS.find(x=>x.name===name)){alert('Manager already exists');return;}
+    MANAGERS.push({name,email,team,role});
+  }
+  save();populateManagerSelects();closeModal('manager-modal');renderManagers();renderDashboard();
+}
+
+// ── REASSIGN ASSOCIATIONS ─────────────────────────────────────────────────────
+function getAssocMap(){const map={};meetings.forEach(m=>{if(!map[m.assoc])map[m.assoc]={code:m.assoc,manager:m.manager};});return map;}
+let pendingReassignments={};
+function openReassignModal(){
+  pendingReassignments={};
+  const fEl=document.getElementById('reassign-filter-mgr');
+  if(fEl){fEl.innerHTML='<option value="">All Managers</option>';MANAGERS.forEach(m=>{const o=document.createElement('option');o.value=m.name;o.textContent=m.name;fEl.appendChild(o);});}
+  const nEl=document.getElementById('new-assoc-mgr');
+  if(nEl){nEl.innerHTML='<option value="">Select Manager</option>';MANAGERS.forEach(m=>{const o=document.createElement('option');o.value=m.name;o.textContent=m.name+(m.role==='Senior CM'?' ★':'');nEl.appendChild(o);});}
+  document.getElementById('reassign-search').value='';document.getElementById('reassign-filter-mgr').value='';
+  renderReassignList();document.getElementById('reassign-modal').classList.add('open');
+}
+function renderReassignList(){
+  const search=(document.getElementById('reassign-search')?.value||'').toUpperCase().trim();
+  const mgrF=document.getElementById('reassign-filter-mgr')?.value||'';
+  const map=getAssocMap();
+  let rows=Object.values(map).sort((a,b)=>a.code.localeCompare(b.code));
+  if(search)rows=rows.filter(r=>r.code.includes(search));
+  if(mgrF)rows=rows.filter(r=>r.manager===mgrF);
+  const tbody=document.getElementById('reassign-tbody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="3" class="empty">No associations found</td></tr>';return;}
+  tbody.innerHTML=rows.map(r=>{
+    const pending=pendingReassignments[r.code];
+    const tc=MANAGERS.find(m=>m.name===r.manager)?.team==='Blue Team'?'team-blue':'team-green';
+    const opts=MANAGERS.map(m=>`<option value="${m.name}" ${(pending||r.manager)===m.name?'selected':''}>${m.name}${m.role==='Senior CM'?' ★':''}</option>`).join('');
+    return`<tr>
+      <td><strong>${r.code}</strong></td>
+      <td><span class="${tc}" style="font-size:12px">${r.manager}</span>${pending&&pending!==r.manager?`<span class="badge badge-orange" style="margin-left:4px;font-size:10px">→ ${pending}</span>`:''}</td>
+      <td><select style="font-size:12px;padding:4px 6px;width:100%" onchange="pendingReassignments['${r.code}']=this.value;renderReassignList()">${opts}</select></td>
+    </tr>`;
+  }).join('');
+}
+function saveReassignments(){
+  let count=0;
+  Object.entries(pendingReassignments).forEach(([code,newMgr])=>{
+    const map=getAssocMap();const oldMgr=map[code]?.manager;
+    if(!newMgr||newMgr===oldMgr)return;
+    const mgrObj=MANAGERS.find(m=>m.name===newMgr);
+    meetings.forEach(m=>{if(m.assoc===code){m.manager=newMgr;m.team=mgrObj?.team||m.team;}});count++;
+  });
+  if(!count){closeModal('reassign-modal');return;}
+  save();pendingReassignments={};populateManagerSelects();populateAssocFilter();
+  closeModal('reassign-modal');renderManagers();renderMeetings();renderDashboard();
+  alert(`✅ ${count} association${count!==1?'s':''} reassigned successfully.`);
+}
+function addNewAssociation(){
+  const code=document.getElementById('new-assoc-code').value.trim().toUpperCase();
+  const mgr=document.getElementById('new-assoc-mgr').value;
+  if(!code){alert('Code required');return;}if(!mgr||mgr==='Select Manager'){alert('Select a manager');return;}
+  if(meetings.some(m=>m.assoc===code)){alert(`${code} already exists.`);return;}
+  const mgrObj=MANAGERS.find(m=>m.name===mgr);
+  meetings.push({id:Date.now(),manager:mgr,team:mgrObj?.team||'',assoc:code,date:'',type:'Regular',format:'',notes:'New association'});
+  save();document.getElementById('new-assoc-code').value='';document.getElementById('new-assoc-name').value='';document.getElementById('new-assoc-mgr').value='';
+  populateAssocFilter();renderReassignList();alert(`✅ ${code} added and assigned to ${mgr}.`);
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────────────────────────
+let assocSortCol='overall', assocSortDir=-1;
+
+function sortAssocTable(col){
+  assocSortCol===col?assocSortDir*=-1:(assocSortCol=col,assocSortDir=col==='assoc'||col==='manager'||col==='team'?1:-1);
+  renderAnalytics();
+}
+
+function toggleDateRange(){
+  const period=document.getElementById('an-filter-period').value;
+  const dr=document.getElementById('an-date-range');
+  if(dr) dr.style.display=period==='custom'?'flex':'none';
+  renderAnalytics();
+}
+
+function getAnalyticsPeriodFilter(period){
+  const now=new Date();now.setHours(23,59,59,999);
+  const today=now.toISOString().split('T')[0];
+  if(period==='all')return()=>true;
+  if(period==='custom'){
+    const from=(document.getElementById('an-date-from')||{}).value||'';
+    const to=(document.getElementById('an-date-to')||{}).value||today;
+    return m=>(!from||m.date>=from)&&m.date<=to;
+  }
+  if(period==='rolling30'){const d=new Date(now);d.setDate(d.getDate()-30);const from=d.toISOString().split('T')[0];return m=>m.date>=from&&m.date<=today;}
+  if(period==='rolling60'){const d=new Date(now);d.setDate(d.getDate()-60);const from=d.toISOString().split('T')[0];return m=>m.date>=from&&m.date<=today;}
+  if(period==='rolling90'){const d=new Date(now);d.setDate(d.getDate()-90);const from=d.toISOString().split('T')[0];return m=>m.date>=from&&m.date<=today;}
+  if(period==='month'){const from=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;return m=>m.date>=from&&m.date<=today;}
+  if(period==='quarter'){const q=Math.floor(now.getMonth()/3);const qStart=new Date(now.getFullYear(),q*3,1).toISOString().split('T')[0];const qEnd=new Date(now.getFullYear(),q*3+3,0).toISOString().split('T')[0];return m=>m.date>=qStart&&m.date<=qEnd;}
+  return()=>true;
+}
+
+function getMeetingCompliance(m){
+  // Returns {agendaSub, packetBoardSub, packetSupSub, agendaLate, packetBoardLate, packetSupLate}
+  const dl=getDeadlines(m);
+  const today=new Date().toISOString().split('T')[0];
+  const isPast=m.date<today;
+  if(!isPast) return null; // only score past meetings
+
+  const agendaSubs=submissions.filter(s=>s.manager===m.manager&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type==='Agenda');
+  const packetBoardSubs=submissions.filter(s=>s.manager===m.manager&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type==='Board Packet'&&s.subtype==='Distributed to Board (Senior CM)');
+  const packetSupSubs=submissions.filter(s=>s.manager===m.manager&&s.assoc===m.assoc&&s.meetingDate===m.date&&s.type==='Board Packet'&&s.subtype==='For Supervisor Review');
+
+  function daysLate(sub, dueDate){
+    if(!sub||!dueDate) return 0;
+    const subDate=new Date(sub.submittedAt).toISOString().split('T')[0];
+    const due=dueDate.toISOString().split('T')[0];
+    if(subDate<=due) return 0;
+    return Math.round((new Date(subDate)-new Date(due))/86400000);
+  }
+
+  const agendaSub=agendaSubs.length>0?agendaSubs[0]:null;
+  const packetBoardSub=packetBoardSubs.length>0?packetBoardSubs[0]:null;
+  const packetSupSub=packetSupSubs.length>0?packetSupSubs[0]:null;
+
+  return {
+    agendaSub:!!agendaSub, packetBoardSub:!!packetBoardSub,
+    packetSupSub:m.isSeniorCM?true:!!packetSupSub,
+    agendaLate:daysLate(agendaSub,dl.agendaDue),
+    packetBoardLate:daysLate(packetBoardSub,dl.boardPacketDue),
+    packetSupLate:m.isSeniorCM?0:daysLate(packetSupSub,dl.supervisorDue),
+    checklistDone:!!getPostMeeting(m.manager,m.assoc,m.date)
+  };
+}
+
+function calcManagerStats(mgrName, filteredMeetings){
+  const myMtgs=filteredMeetings.filter(m=>m.manager===mgrName&&m.date);
+  const senior=isSeniorCM(mgrName);
+  let agendaTotal=0,agendaDone=0,packetBoardTotal=0,packetBoardDone=0;
+  let packetSupTotal=0,packetSupDone=0,checklistTotal=0,checklistDone=0;
+  let totalLate=0,lateCount=0,noSubCount=0;
+
+  myMtgs.forEach(m=>{
+    const c=getMeetingCompliance({...m,isSeniorCM:senior});
+    if(!c)return;
+    agendaTotal++; if(c.agendaSub)agendaDone++;
+    packetBoardTotal++; if(c.packetBoardSub)packetBoardDone++;
+    if(!senior){packetSupTotal++;if(c.packetSupSub)packetSupDone++;}
+    checklistTotal++; if(c.checklistDone)checklistDone++;
+    if(c.agendaLate>0){totalLate+=c.agendaLate;lateCount++;}
+    if(c.packetBoardLate>0){totalLate+=c.packetBoardLate;lateCount++;}
+    if(!c.agendaSub&&!c.packetBoardSub)noSubCount++;
+  });
+
+  const agendaRate=agendaTotal?Math.round(agendaDone/agendaTotal*100):100;
+  const packetBoardRate=packetBoardTotal?Math.round(packetBoardDone/packetBoardTotal*100):100;
+  const packetSupRate=!senior&&packetSupTotal?Math.round(packetSupDone/packetSupTotal*100):null;
+  const checklistRate=checklistTotal?Math.round(checklistDone/checklistTotal*100):100;
+  const avgLate=lateCount?Math.round((totalLate/lateCount)*10)/10:0;
+  const overallParts=[agendaRate,packetBoardRate,...(packetSupRate!==null?[packetSupRate]:[]),checklistRate];
+  const overall=Math.round(overallParts.reduce((a,b)=>a+b,0)/overallParts.length);
+
+  return{agendaRate,packetBoardRate,packetSupRate,checklistRate,avgLate,noSubCount,overall,meetings:myMtgs.length,senior};
+}
+
+function rateColor(pct){
+  if(pct>=90)return'var(--accent)';
+  if(pct>=70)return'#e65100';
+  return'var(--danger)';
+}
+function rateBarHtml(pct,label=''){
+  const col=rateColor(pct);
+  return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+    ${label?`<span style="font-size:11px;color:var(--muted);min-width:110px">${label}</span>`:''}
+    <div style="flex:1;background:#e0e0e0;border-radius:4px;height:10px;overflow:hidden">
+      <div style="width:${pct}%;background:${col};height:100%;border-radius:4px;transition:.3s"></div>
+    </div>
+    <span style="font-size:11px;font-weight:600;color:${col};min-width:36px;text-align:right">${pct}%</span>
+  </div>`;
+}
+
+function renderAnalytics(){
+  const mgrF=(document.getElementById('an-filter-manager')||{}).value||'';
+  const teamF=(document.getElementById('an-filter-team')||{}).value||'';
+  const period=(document.getElementById('an-filter-period')||{}).value||'all';
+  const periodFilter=getAnalyticsPeriodFilter(period);
+
+  const filteredMeetings=meetings.filter(m=>
+    m.date&&periodFilter(m)&&
+    (!mgrF||m.manager===mgrF)&&
+    (!teamF||m.team===teamF)
+  );
+
+  const mgrs=MANAGERS.filter(m=>(!mgrF||m.name===mgrF)&&(!teamF||m.team===teamF));
+  const mgrStats=mgrs.map(m=>({name:m.name,team:m.team,role:m.role,...calcManagerStats(m.name,filteredMeetings)}));
+
+  // ── KPIs ──
+  const today=new Date().toISOString().split('T')[0];
+  const pastMtgs=filteredMeetings.filter(m=>m.date<today);
+  const totalMtgs=pastMtgs.length;
+  const avgOverall=mgrStats.length?Math.round(mgrStats.reduce((a,m)=>a+m.overall,0)/mgrStats.length):0;
+  const avgChecklist=mgrStats.length?Math.round(mgrStats.reduce((a,m)=>a+m.checklistRate,0)/mgrStats.length):0;
+  const totalNoSub=mgrStats.reduce((a,m)=>a+m.noSubCount,0);
+  const kpiEl=document.getElementById('an-kpis');
+  if(kpiEl)kpiEl.innerHTML=`
+    <div class="card stat-box"><div class="num">${totalMtgs}</div><div class="lbl">Meetings in Period</div></div>
+    <div class="card stat-box"><div class="num" style="color:${rateColor(avgOverall)}">${avgOverall}%</div><div class="lbl">Avg Overall Compliance</div></div>
+    <div class="card stat-box"><div class="num" style="color:${rateColor(avgChecklist)}">${avgChecklist}%</div><div class="lbl">Avg Checklist Completion</div></div>
+    <div class="card stat-box"><div class="num" style="color:${totalNoSub>0?'var(--danger)':'var(--accent)'}">${totalNoSub}</div><div class="lbl">Meetings No Submissions</div></div>
+  `;
+
+  // ── Manager bar chart ──
+  const sortedMgrs=[...mgrStats].sort((a,b)=>b.overall-a.overall);
+  const mgrChartEl=document.getElementById('an-chart-manager');
+  if(mgrChartEl)mgrChartEl.innerHTML=sortedMgrs.map(m=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:12px;font-weight:600">${m.name}${m.role==='Senior CM'?'<span class="senior-tag" style="margin-left:4px">SCM</span>':''}</span>
+        <span style="font-size:11px;color:var(--muted)">${m.meetings} mtgs</span>
+      </div>
+      ${rateBarHtml(m.agendaRate,'Agenda')}
+      ${rateBarHtml(m.packetBoardRate,'Pkt→Board')}
+      ${m.packetSupRate!==null?rateBarHtml(m.packetSupRate,'Pkt→Supervisor'):''}
+      ${rateBarHtml(m.checklistRate,'Checklist')}
+    </div>`).join('');
+
+  // ── Team comparison via Chart.js ──
+  const blueStats=mgrStats.filter(m=>m.team==='Blue Team');
+  const greenStats=mgrStats.filter(m=>m.team==='Green Team');
+  const teamAvg=(arr,key)=>arr.length?Math.round(arr.reduce((a,m)=>a+m[key],0)/arr.length):0;
+  const teamLabels=['Agenda','Pkt→Board','Checklist','Overall'];
+  const blueVals=[teamAvg(blueStats,'agendaRate'),teamAvg(blueStats,'packetBoardRate'),teamAvg(blueStats,'checklistRate'),teamAvg(blueStats,'overall')];
+  const greenVals=[teamAvg(greenStats,'agendaRate'),teamAvg(greenStats,'packetBoardRate'),teamAvg(greenStats,'checklistRate'),teamAvg(greenStats,'overall')];
+  const teamCanvas=document.getElementById('an-chart-team');
+  if(teamCanvas){
+    if(teamChartInstance){teamChartInstance.destroy();teamChartInstance=null;}
+    teamChartInstance=new Chart(teamCanvas,{
+      type:'bar',
+      data:{
+        labels:teamLabels,
+        datasets:[
+          {label:'Blue Team',data:blueVals,backgroundColor:'#1565c0',borderRadius:4,borderSkipped:false},
+          {label:'Green Team',data:greenVals,backgroundColor:'#2e7d32',borderRadius:4,borderSkipped:false}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw}%`}}},
+        scales:{
+          x:{grid:{display:false},ticks:{font:{size:12},color:'#6b7280'}},
+          y:{min:0,max:100,grid:{color:'#eef1f5'},ticks:{callback:v=>v+'%',font:{size:11},color:'#6b7280'},title:{display:true,text:'Compliance %',color:'#6b7280',font:{size:11}}}
+        }
+      }
+    });
+  }
+
+  // ── Performance over time via Chart.js ──
+  const byMonth={};
+  filteredMeetings.filter(m=>m.date<today).forEach(m=>{
+    const key=m.date.substring(0,7);
+    if(!byMonth[key])byMonth[key]={total:0,done:0,checklists:0,cTotal:0};
+    const senior=isSeniorCM(m.manager);
+    const c=getMeetingCompliance({...m,isSeniorCM:senior});
+    if(!c)return;
+    byMonth[key].total++;if(c.agendaSub&&c.packetBoardSub)byMonth[key].done++;
+    byMonth[key].cTotal++;if(c.checklistDone)byMonth[key].checklists++;
+  });
+  const months=Object.keys(byMonth).sort();
+  const mLabels=months.map(m=>{const p=m.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(p[1])-1]+' '+p[0].slice(2);});
+  const compRates=months.map(m=>byMonth[m].total?Math.round(byMonth[m].done/byMonth[m].total*100):0);
+  const clRates=months.map(m=>byMonth[m].cTotal?Math.round(byMonth[m].checklists/byMonth[m].cTotal*100):0);
+  const timeCanvas=document.getElementById('an-chart-time');
+  if(timeCanvas){
+    if(timeChartInstance){timeChartInstance.destroy();timeChartInstance=null;}
+    timeChartInstance=new Chart(timeCanvas,{
+      type:'line',
+      data:{
+        labels:mLabels,
+        datasets:[
+          {label:'Submission compliance',data:compRates,borderColor:'#1a4f8a',backgroundColor:'rgba(26,79,138,0.08)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#1a4f8a',borderWidth:2},
+          {label:'Checklist completion',data:clRates,borderColor:'#3a8c3f',backgroundColor:'rgba(58,140,63,0.06)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#3a8c3f',borderWidth:2,borderDash:[5,3]}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw}%`}}},
+        scales:{
+          x:{grid:{display:false},ticks:{font:{size:11},color:'#6b7280',maxRotation:45,autoSkip:false}},
+          y:{min:0,max:100,grid:{color:'#eef1f5'},ticks:{callback:v=>v+'%',font:{size:11},color:'#6b7280'}}
+        }
+      }
+    });
+  }
+
+  // ── Average days late ──
+  const lateEl=document.getElementById('an-chart-late');
+  const sortedLate=[...mgrStats].sort((a,b)=>b.avgLate-a.avgLate);
+  if(lateEl)lateEl.innerHTML=sortedLate.map(m=>{
+    const maxLate=Math.max(...sortedLate.map(x=>x.avgLate),1);
+    const pct=Math.round(m.avgLate/maxLate*100);
+    const col=m.avgLate===0?'var(--accent)':m.avgLate<2?'#e65100':'var(--danger)';
+    return`<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+        <span style="font-size:12px;font-weight:600">${m.name}</span>
+        <span style="font-size:11px;font-weight:600;color:${col}">${m.avgLate===0?'On time':m.avgLate+'d avg late'}</span>
+      </div>
+      <div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden">
+        <div style="width:${pct}%;background:${col};height:100%;border-radius:4px"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── Checklist completion ──
+  const clEl=document.getElementById('an-chart-checklist');
+  const sortedCl=[...mgrStats].sort((a,b)=>b.checklistRate-a.checklistRate);
+  if(clEl)clEl.innerHTML=sortedCl.map(m=>`
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+        <span style="font-size:12px;font-weight:600">${m.name}</span>
+        <span style="font-size:11px;font-weight:600;color:${rateColor(m.checklistRate)}">${m.checklistRate}%</span>
+      </div>
+      ${rateBarHtml(m.checklistRate)}
+    </div>`).join('');
+
+  // ── No submissions ──
+  const nsEl=document.getElementById('an-chart-nosubmit');
+  const sortedNs=[...mgrStats].filter(m=>m.meetings>0).sort((a,b)=>b.noSubCount-a.noSubCount);
+  if(nsEl)nsEl.innerHTML=sortedNs.length?sortedNs.map(m=>{
+    const col=m.noSubCount===0?'var(--accent)':m.noSubCount<3?'#e65100':'var(--danger)';
+    const pct=Math.round(m.noSubCount/(m.meetings||1)*100);
+    return`<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:6px;margin-bottom:5px;background:${m.noSubCount===0?'#f1f8f1':'#fff5f5'}">
+      <div style="flex:1"><span style="font-size:12px;font-weight:600">${m.name}</span></div>
+      <span style="font-size:11px;color:var(--muted)">${m.meetings} meetings</span>
+      <span style="font-size:12px;font-weight:700;color:${col}">${m.noSubCount===0?'✓ None':m.noSubCount+' missing ('+pct+'%)'}</span>
+    </div>`;
+  }).join(''):'<div class="empty">No data for selected period</div>';
+
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────────────────────────
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyXChC6av6NaMhO3lyZD9tK4BJnXPLkYNqt9YT7KlTav4mmptBgXW4ZWpjE_Ls2-HjTtg/exec';
+let autoSyncInterval=null;
+function parseCSV(text){
+  const lines=text.trim().split('\n');if(lines.length<2)return[];
+  const headers=lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
+  return lines.slice(1).map(line=>{
+    const cols=[];let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=c;}
+    cols.push(cur.trim());
+    const row={};headers.forEach((h,i)=>row[h]=(cols[i]||'').replace(/^"|"$/g,'').trim());return row;
+  }).filter(r=>Object.values(r).some(v=>v));
+}
+function findColVal(row,candidates){
+  for(const c of candidates){const key=Object.keys(row).find(k=>k.toLowerCase().includes(c.toLowerCase()));if(key&&row[key])return row[key];}return'';
+}
+function parseMeetingDate(str){
+  if(!str)return'';
+  const mdy=str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(mdy)return`${mdy[3]}-${String(mdy[1]).padStart(2,'0')}-${String(mdy[2]).padStart(2,'0')}`;
+  const iso=str.match(/(\d{4})-(\d{2})-(\d{2})/);if(iso)return iso[0];
+  const d=new Date(str);if(!isNaN(d))return d.toISOString().split('T')[0];return'';
+}
+function processSubmissionsRows(rows){
+  let added=0;
+  rows.forEach(row=>{
+    const manager   = row['CM']||'';
+    const team      = row['CM Team']||'';
+    const assoc     = row['Association']||'';
+    const mDate     = parseMeetingDate(row['Meeting Date']||'');
+    const mType     = row['Meeting Type']||'';
+    const docType   = row['Agenda or Board Packet']||'';
+    const subtype   = row['Submission Type']||'';
+    const format    = row['Meeting Format']||'';
+    const includesRaw = row['Board Packet Includes']||'';
+    const notes     = row['Any comments or notes']||'';
+    const submittedAt = row['Submission Date']||new Date().toISOString();
+    if(!manager||!assoc||!mDate||!docType)return;
+    if(submissions.some(s=>s.manager===manager&&s.assoc===assoc&&s.meetingDate===mDate&&s.type===docType&&s.subtype===subtype))return;
+    const includes=includesRaw?includesRaw.split(/[,;]/).map(s=>s.trim()).filter(Boolean):[];
+    submissions.push({id:Date.now()+Math.random(),manager,team,assoc,meetingDate:mDate,meetingType:mType,type:docType,subtype,format,includes,file:'',notes,status:'Submitted',submittedAt:new Date(submittedAt).toISOString()});
+    if(!meetings.some(m=>m.manager===manager&&m.assoc===assoc&&m.date===mDate)){
+      const mgrObj=MANAGERS.find(m=>m.name===manager);
+      meetings.push({id:Date.now()+Math.random(),manager,team:mgrObj?.team||team,assoc,date:mDate,type:mType||'Regular',format,notes:''});
+    }
+    added++;
+  });
+  return added;
+}
+
+function processPostMeetingRows(rows){
+  let added=0;
+  rows.forEach(row=>{
+    const manager   = row['CM']||'';
+    const team      = row['CM Team']||'';
+    const assoc     = (row['Association']||'').trim();
+    const mDate     = parseMeetingDate(row['Meeting Date']||'');
+    const mType     = row['Meeting Type']||'';
+    const submittedAt = row['Submission Date']||new Date().toISOString();
+    if(!manager||!assoc||!mDate)return;
+    if(postMeetings.some(p=>p.manager===manager&&p.assoc===assoc&&p.meetingDate===mDate))return;
+    postMeetings.push({
+      id:Date.now()+Math.random(),manager,team,assoc,meetingDate:mDate,meetingType:mType,
+      minutesSaved:        row['Minutes approved from previous meeting SAVED as PDF with APPROVED in file name, saved in COTA, and uploaded to CincWebAxis.']||'—',
+      draftMinutes:        row['Draft minutes SAVED from the just-completed meeting in COTA using proper naming principles (if received by board secretary).']||'—',
+      actionItemsCreated:  row['Board Action Items CREATED in CINC portfolio module.']||'—',
+      weeklySummarySent:   row['SEND a copy of the Weekly Status Summary report to the Board president if Board View is not turned on in the Board Portal']||'—',
+      proposalsSent:       row['Approved proposals/contracts SENT to the BOD president or BOD representative for electronic (Adobe Sign) signature.']||'—',
+      signedCopiesSaved:   row['Signed copies SAVED in COTA with proper naming protocol and SAVED in CincWebAxis under Contracts \u2013 Current Year.']||'—',
+      vendorEmailsSent:    row['EMAIL copies of approved proposals/contracts to applicable vendors after saving in COTA.']||'—',
+      docsUploaded:        row['UPLOAD the board packet, updated management plan, and any other applicable documents to CincWebAxis.']||'—',
+      nextMeetingScheduled:row['Meeting invitation CREATED on the platform being used (Teams, Zoom, Other) for the next board meeting and invite SENT to Board.']||'—',
+      calendarsUpdated:    row['FCM Shared Calendar, Meeting Tracker, and CincWebAxis Calendar UPDATED with the next meeting date and time.']||'—',
+      boardDirectoryUpdated:row['Board Directory in CINC UPDATED with new board members, Board Email field updated on information tab in CINC, and New Board Member Emails SENT/SCHEDULED.']||'—',
+      rulesUpdated:        row['Rules and Regulations UPDATED, SAVED in COTA, SAVED in CincWebAXis, and SENT to Residents.']||'—',
+      notes:'',
+      submittedAt:new Date(submittedAt).toISOString()
+    });
+    if(!meetings.some(m=>m.manager===manager&&m.assoc===assoc&&m.date===mDate)){
+      const mgrObj=MANAGERS.find(m=>m.name===manager);
+      meetings.push({id:Date.now()+Math.random(),manager,team:mgrObj?.team||team,assoc,date:mDate,type:mType||'Regular',format:'',notes:''});
+    }
+    added++;
+  });
+  return added;
+}
+async function syncFromSheets(){
+  const btn=document.getElementById('sync-btn');const status=document.getElementById('sync-status');
+  btn.disabled=true;btn.textContent='🔄 Syncing...';status.style.color='var(--muted)';status.textContent='Fetching submissions sheet...';
+  let subAdded=0,pmAdded=0,errors=[];
+  try{
+    const res=await fetch(APPS_SCRIPT_URL+'?type=submissions');
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const json=await res.json();
+    if(json.error)throw new Error(json.error);
+    subAdded=processSubmissionsRows(json.rows||[]);
+  }catch(e){errors.push(`Submissions: ${e.message}`);}
+  status.textContent='Fetching post-meeting sheet...';
+  try{
+    const res=await fetch(APPS_SCRIPT_URL+'?type=postmeeting');
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const json=await res.json();
+    if(json.error)throw new Error(json.error);
+    pmAdded=processPostMeetingRows(json.rows||[]);
+  }catch(e){errors.push(`Post-Meeting: ${e.message}`);}
+  save();populateManagerSelects();populateAssocFilter();renderDashboard();
+  const now=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  if(errors.length){status.style.color='var(--danger)';status.innerHTML=`⚠️ Sync issues at ${now}:<br>${errors.map(e=>`• ${e}`).join('<br>')}`;}
+  else{status.style.color='var(--accent)';status.textContent=`✅ Synced at ${now} — ${subAdded} new submission${subAdded!==1?'s':''}, ${pmAdded} new checklist${pmAdded!==1?'s':''}.`;}
+  btn.disabled=false;btn.textContent='🔄 Sync Now';
+}
+function toggleAutoSync(){
+  const btn=document.getElementById('auto-sync-btn');
+  if(autoSyncInterval){clearInterval(autoSyncInterval);autoSyncInterval=null;btn.textContent='⏱ Enable Auto-Sync';btn.classList.remove('btn-success');btn.classList.add('btn-outline');document.getElementById('sync-status').textContent='Auto-sync disabled.';}
+  else{syncFromSheets();autoSyncInterval=setInterval(syncFromSheets,5*60*1000);btn.textContent='⏱ Auto-Sync ON (5 min)';btn.classList.remove('btn-outline');btn.classList.add('btn-success');}
+}
+
+// ── WEBHOOKS ──────────────────────────────────────────────────────────────────
+function simulatePreMeetingWebhook(){
+  const mgr=MANAGERS[Math.floor(Math.random()*MANAGERS.length)];
+  const assocs=['MVWD','CLRK','SPRG','BRKL','NRTW'];const assoc=assocs[Math.floor(Math.random()*assocs.length)];
+  const docType=Math.random()>.5?'Agenda':'Board Packet';const senior=mgr.role==='Senior CM';
+  const subtype=docType==='Agenda'?'For Supervisor Review':(senior?'Distributed to Board (Senior CM)':'For Supervisor Review');
+  const meetingDate=new Date();meetingDate.setDate(meetingDate.getDate()+Math.floor(Math.random()*30)+5);
+  const dateStr=meetingDate.toISOString().split('T')[0];
+  submissions.push({id:Date.now(),manager:mgr.name,team:mgr.team,assoc,meetingDate:dateStr,meetingType:'Regular',type:docType,subtype,includes:docType==='Board Packet'?['Agenda','Minutes','Management Report']:[],file:`${assoc}_${docType.replace(' ','')}_${dateStr}.pdf`,notes:'Via webhook simulation',status:'Submitted',submittedAt:new Date().toISOString()});
+  if(!meetings.some(m=>m.manager===mgr.name&&m.assoc===assoc&&m.date===dateStr))
+    meetings.push({id:Date.now()+1,manager:mgr.name,team:mgr.team,assoc,date:dateStr,type:'Regular',format:'',notes:''});
+  save();renderDashboard();alert(`✅ Pre-Meeting Webhook Simulated!\n\nManager: ${mgr.name} (${mgr.role})\nAssociation: ${assoc}\nDocument: ${docType}\nMeeting: ${dateStr}`);
+}
+function simulatePostMeetingWebhook(){
+  const mgr=MANAGERS[Math.floor(Math.random()*MANAGERS.length)];
+  const pastMtgs=meetings.filter(m=>m.manager===mgr.name&&m.date&&new Date(m.date+'T12:00:00')<new Date()&&!getPostMeeting(m.manager,m.assoc,m.date));
+  let assoc,date,type;
+  if(pastMtgs.length){const m=pastMtgs[0];assoc=m.assoc;date=m.date;type=m.type;}
+  else{const assocs=['MVWD','CLRK','SPRG','BRKL','NRTW'];assoc=assocs[Math.floor(Math.random()*assocs.length)];const d=new Date();d.setDate(d.getDate()-Math.floor(Math.random()*14)-1);date=d.toISOString().split('T')[0];type='Regular';}
+  const payload={id:Date.now(),manager:mgr.name,team:mgr.team,assoc,meetingDate:date,meetingType:type,minutesSaved:'Yes',draftMinutes:'Yes',actionItemsCreated:'Completed',weeklySummarySent:'Completed',proposalsSent:Math.random()>.5?'Done':'N/A',signedCopiesSaved:Math.random()>.5?'Both Done':'N/A',vendorEmailsSent:'N/A',docsUploaded:'Done',nextMeetingScheduled:'Both',calendarsUpdated:'All Done',notes:'Via webhook simulation',submittedAt:new Date().toISOString()};
+  const ei=postMeetings.findIndex(p=>p.manager===mgr.name&&p.assoc===assoc&&p.meetingDate===date);
+  if(ei>=0)postMeetings[ei]=payload;else postMeetings.push(payload);
+  if(!meetings.some(m=>m.manager===mgr.name&&m.assoc===assoc&&m.date===date))
+    meetings.push({id:Date.now()+1,manager:mgr.name,team:mgr.team,assoc,date,type,format:'',notes:''});
+  save();renderDashboard();renderMeetings();alert(`✅ Post-Meeting Checklist Webhook Simulated!\n\nManager: ${mgr.name}\nAssociation: ${assoc}\nMeeting: ${date}`);
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ── CLOCK ─────────────────────────────────────────────────────────────────────
+setInterval(()=>{const now=new Date();document.getElementById('clock').textContent=now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+' · '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});},1000);
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+populateManagerSelects();
+populateAssocFilter();
+renderDashboard();
+</script>
+</body>
+</html>
